@@ -1,0 +1,5 @@
+INSERT INTO [dbo].[Tipo_Allerta] ([Id_Tipo_Allerta], [Descrizione], [Note]) VALUES (0, NULL, NULL)
+INSERT INTO [dbo].[Tipo_Allerta] ([Id_Tipo_Allerta], [Descrizione], [Note]) VALUES (254, 'Start', N'Avvio di un''operazione logica.')
+INSERT INTO [dbo].[Tipo_Allerta] ([Id_Tipo_Allerta], [Descrizione], [Note]) VALUES (512, 'Stop', N'Interruzione di un''operazione logica.')
+INSERT INTO [dbo].[Tipo_Allerta] ([Id_Tipo_Allerta], [Descrizione], [Note]) VALUES (1024, 'Suspend', N'Sospensione di un''operazione logica.')
+INSERT INTO [dbo].[Tipo_Allerta] ([Id_Tipo_Allerta], [Descrizione], [Note]) VALUES (2024, 'Resume', N'Ripristino di un''operazione logica.')

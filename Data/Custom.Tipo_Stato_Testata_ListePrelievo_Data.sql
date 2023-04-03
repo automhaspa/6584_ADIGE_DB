@@ -1,0 +1,6 @@
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (1, 'Prelevabile')
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (2, 'In Esecuzione')
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (3, 'Evasa con Mancanti')
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (4, 'Evasa Completamente')
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (5, 'Sospesa')
+INSERT INTO [Custom].[Tipo_Stato_Testata_ListePrelievo] ([Id_Stato_Testata], [Descrizione]) VALUES (6, 'Chiusura Forzata')

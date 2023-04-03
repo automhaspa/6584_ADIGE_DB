@@ -1,0 +1,8 @@
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (2, 3101)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (3, 3203)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (4, 3404)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (5, 3604)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (6, 3501)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (7, 3301)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (9, 3302)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (10, 3701)

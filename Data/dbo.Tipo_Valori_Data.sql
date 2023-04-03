@@ -1,0 +1,5 @@
+INSERT INTO [dbo].[Tipo_Valori] ([Id_Tipo_Valore], [Descrizione], [Id_Tipo_Dato]) VALUES ('B', 'Barcode', 'varchar')
+INSERT INTO [dbo].[Tipo_Valori] ([Id_Tipo_Valore], [Descrizione], [Id_Tipo_Dato]) VALUES ('C', 'Codice numerico', 'int')
+INSERT INTO [dbo].[Tipo_Valori] ([Id_Tipo_Valore], [Descrizione], [Id_Tipo_Dato]) VALUES ('D', 'Descrizione', 'varchar')
+INSERT INTO [dbo].[Tipo_Valori] ([Id_Tipo_Valore], [Descrizione], [Id_Tipo_Dato]) VALUES ('I', 'Immagine ', 'image')
+INSERT INTO [dbo].[Tipo_Valori] ([Id_Tipo_Valore], [Descrizione], [Id_Tipo_Dato]) VALUES ('S', 'Stringa', 'Varchar')

@@ -1,0 +1,6 @@
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (1, 'Nuova', 'fa fa-pause fa-2x')
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (2, 'Simulata', 'fa fa-search fa-2x')
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (3, 'Sospesa', 'fa fa-pause fa-2x')
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (4, 'Accettato', 'fa fa-play fa-2x')
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (5, 'Esecuzione', 'fa fa-play fa-2x')
+INSERT INTO [dbo].[Tipo_Stati_Lista] ([Id_Stato_Lista], [Descrizione], [Icona]) VALUES (6, 'Finita', 'fa fa-check fa-2x')

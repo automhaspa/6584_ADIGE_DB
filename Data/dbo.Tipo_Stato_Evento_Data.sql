@@ -1,0 +1,8 @@
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (1, 'Operativo           ', 'OPE')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (2, 'In Elaborazione     ', 'INE')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (3, 'Elaborato           ', 'ELA')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (4, 'Bloccato            ', 'BLO')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (5, 'Eliminato           ', 'ELI')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (6, 'Sospeso             ', 'SOS')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (7, 'Annullato           ', 'ANL')
+INSERT INTO [dbo].[Tipo_Stato_Evento] ([Id_Tipo_Stato_Evento], [Descrizione], [Descrizione_Abbreviata]) VALUES (8, 'Errore', 'ERR')

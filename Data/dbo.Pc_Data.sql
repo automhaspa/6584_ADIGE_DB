@@ -1,0 +1,17 @@
+SET IDENTITY_INSERT [dbo].[Pc] ON
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (1, 'Remote Dev', '192.168.1.223')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (4, 'Local Dev', '::1')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (7, 'INBOUND BAY', '10.13.10.133')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (9, 'AREA PICKING 3D04', '10.13.10.47')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (11, 'AREA PICKING 3F04', '10.13.10.79')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (13, 'BAIA SPECIALIZZAZIONE 3C01', '10.13.10.152')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (14, 'BAIA SPECIALIZZAZIONE 3C02', '10.13.10.147')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (15, 'BAIA OUTBOUND', '10.13.10.46')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (16, 'BAIA CONTROLLO QUALITA', '10.13.10.169')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (17, 'PC LUCA BORTONDELLO', '10.13.10.107')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (18, 'BAIA INGOMBRANTI', '10.13.10.40')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (19, 'BAIA SPECIALIZZAZIONE/KITTING', '10.13.10.154')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (20, 'PC UFFICIO CQ', '10.13.11.15')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (21, 'BAIA 3A01', '10.13.10.38')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (22, 'BAIA MARCELLO', '10.121.10.15')
+SET IDENTITY_INSERT [dbo].[Pc] OFF

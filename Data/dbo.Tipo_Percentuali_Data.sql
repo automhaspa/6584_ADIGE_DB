@@ -1,0 +1,6 @@
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (0)
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (20)
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (40)
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (60)
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (80)
+INSERT INTO [dbo].[Tipo_Percentuali] ([Id_Percentuale]) VALUES (100)

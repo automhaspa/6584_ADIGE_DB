@@ -1,0 +1,3 @@
+INSERT INTO [dbo].[Procedure_Personalizzate_Gestione_Messaggi] ([Id_Partizione], [Id_Tipo_Messaggio], [Procedura], [Id_Partizione_OK], [Id_Partizione_OUT], [Id_Partizione_DEF]) VALUES (2110, '11031', 'sp_GestMsg_LuDataFromAsi', NULL, 3203, NULL)
+INSERT INTO [dbo].[Procedure_Personalizzate_Gestione_Messaggi] ([Id_Partizione], [Id_Tipo_Messaggio], [Procedura], [Id_Partizione_OK], [Id_Partizione_OUT], [Id_Partizione_DEF]) VALUES (3101, '11000', 'sp_GestMsg_LuOnAsi', 3102, 3203, NULL)
+INSERT INTO [dbo].[Procedure_Personalizzate_Gestione_Messaggi] ([Id_Partizione], [Id_Tipo_Messaggio], [Procedura], [Id_Partizione_OK], [Id_Partizione_OUT], [Id_Partizione_DEF]) VALUES (3102, '11031', 'sp_GestMsg_LuDataFromAsi', NULL, 3101, NULL)

@@ -1,0 +1,8 @@
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (0, 'Inserito', NULL)
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (1, 'Nuovo', NULL)
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (2, 'Simulato', NULL)
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (3, 'Sospseso', '~/App_Themes/Default/Icone/16x16/information.png')
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (4, 'Accettato', '~/App_Themes/Default/Icone/16x16/scroll.png')
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (5, 'Prelevato', '~/App_Themes/Default/Icone/16x16/check.png')
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (6, 'Ignorato', NULL)
+INSERT INTO [dbo].[Tipo_Stato_Articolo] ([Id_Stato_Articolo], [Descrizione], [Icona]) VALUES (7, 'Caricato', NULL)

@@ -1,0 +1,7 @@
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('A', 'Azienda')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('C', 'Cliente')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('D', 'Destinatario')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('F', 'Fornitore')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('G', 'Gruppo')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('S', 'Stabilimento')
+INSERT INTO [dbo].[Tipo_AssAnag] ([Id_Tipo_Associato], [Descrizione_Tipo]) VALUES ('V', 'Vettore')

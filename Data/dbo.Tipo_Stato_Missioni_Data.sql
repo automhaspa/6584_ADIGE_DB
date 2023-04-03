@@ -1,0 +1,6 @@
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('DEL', 'Cancellata', 'fa fa-trash-o fa-2x', 0)
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('ELA', 'In Attesa', 'fa fa-pause fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('ESE', 'In Esecuzione', 'fa fa-play fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('IMP', 'Impossibile', 'fa fa-ban fa-2x', 0)
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('NEW', 'Nuova', 'fa fa-gear fa-2x', 0)
+INSERT INTO [dbo].[Tipo_Stato_Missioni] ([Id_Stato_Missione], [Descrizione], [Icona], [Selectable]) VALUES ('TOK', 'Eseguita', 'fa fa-check fa-2x', 0)

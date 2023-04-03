@@ -1,0 +1,6 @@
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (1, 'Molto bassa', 'fa fa-angle-double-down fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (2, 'Bassa', 'fa fa-angle-down fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (3, 'Normale', 'fa fa-minus fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (4, 'Media', 'fa fa-angle-up fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (5, 'Alta', 'fa fa-angle-double-up fa-2x', 1)
+INSERT INTO [dbo].[Tipo_Priorita] ([Priorita], [Descrizione], [Icona], [Selectable]) VALUES (99, 'Molto Alta', 'fa fa-angle-double-up fa-2x', 1)
