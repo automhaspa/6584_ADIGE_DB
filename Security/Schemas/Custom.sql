@@ -1,0 +1,3 @@
+CREATE SCHEMA [Custom]
+AUTHORIZATION [l3_adige]
+GO

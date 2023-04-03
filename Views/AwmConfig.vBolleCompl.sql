@@ -1,0 +1,15 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE VIEW [AwmConfig].[vBolleCompl] AS
+SELECT	Codice_DDT			CODICE_DDT,
+		DataOra_Creazione	DATA_CREAZIONE,
+		'Fake'				TIPO_BOLLA
+FROM	Custom.AnagraficaDdtFittizi
+UNION
+SELECT	CONCAT(LOAD_ORDER_ID, '_',LOAD_ORDER_TYPE),
+		DT_RECEIVE_BLM,
+		'Da ERP'
+FROM	Custom.TestataOrdiniEntrata
+GO

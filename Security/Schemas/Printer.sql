@@ -1,0 +1,3 @@
+CREATE SCHEMA [Printer]
+AUTHORIZATION [dbo]
+GO

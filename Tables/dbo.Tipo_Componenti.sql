@@ -1,0 +1,9 @@
+CREATE TABLE [dbo].[Tipo_Componenti]
+(
+[ID_TIPO_COMPONENTE] [varchar] (1) COLLATE Latin1_General_CI_AS NOT NULL,
+[DESCRIZIONE] [nvarchar] (50) COLLATE Latin1_General_CI_AS NOT NULL,
+[PESO_PASSO] [int] NOT NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Tipo_Componenti] ADD CONSTRAINT [PK_Tipo_Componenti] PRIMARY KEY CLUSTERED ([ID_TIPO_COMPONENTE]) ON [PRIMARY]
+GO

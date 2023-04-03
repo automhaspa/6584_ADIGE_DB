@@ -1,0 +1,2 @@
+CREATE USER [l3_adige] WITHOUT LOGIN
+GO

@@ -1,0 +1,9 @@
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+create view [AwmConfig].[vTipoQuotaDeposito] as
+SELECT -920 AS Id_Tipo_Quota, 'SINISTRA: -920' AS Descrizione UNION
+SELECT 0 , 'CENTRO: 0' UNION
+SELECT 920, 'DESTRA: +920'
+GO

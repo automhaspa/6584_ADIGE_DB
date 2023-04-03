@@ -1,0 +1,10 @@
+CREATE TABLE [dbo].[Tipo_Partizioni]
+(
+[ID_TIPO_PARTIZIONE] [varchar] (2) COLLATE Latin1_General_CI_AS NOT NULL,
+[DESCRIZIONE] [nvarchar] (50) COLLATE Latin1_General_CI_AS NOT NULL,
+[SELECTABLE] [bit] NOT NULL,
+[ICONA] [varchar] (50) COLLATE Latin1_General_CI_AS NULL
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[Tipo_Partizioni] ADD CONSTRAINT [PK_Tipo_Partizioni] PRIMARY KEY CLUSTERED ([ID_TIPO_PARTIZIONE]) ON [PRIMARY]
+GO

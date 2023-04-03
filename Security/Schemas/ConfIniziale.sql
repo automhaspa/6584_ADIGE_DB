@@ -1,0 +1,3 @@
+CREATE SCHEMA [ConfIniziale]
+AUTHORIZATION [dbo]
+GO

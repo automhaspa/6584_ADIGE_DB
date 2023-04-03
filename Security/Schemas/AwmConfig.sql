@@ -1,0 +1,3 @@
+CREATE SCHEMA [AwmConfig]
+AUTHORIZATION [dbo]
+GO
