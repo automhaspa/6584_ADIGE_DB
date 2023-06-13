@@ -4,6 +4,7 @@ SET ANSI_NULLS ON
 GO
 
 
+
 CREATE PROCEDURE [dbo].[sp_Avvia_OrdineSpecializzazione]
 	--Id del Ddt Fake
 	@ID					INT = NULL,
@@ -48,6 +49,9 @@ BEGIN
 
 		IF ISNULL(@ID,0) = 0
 			THROW 50008, 'ID Codice ddt non definito', 1
+
+		IF @Id_Partizione = 7685 AND EXISTS(SELECT TOP 1 1 FROM Udc_Testata WHERE Id_Ddt_Fittizio = @ID AND Id_Tipo_Udc <>'M')
+			THROW 50001, 'IMPOSSIBILE AVVIARE LA SPECIALIZZAZIONE VERSO LA BAIA ADIGE 1 SE SONO PREVISTE UDC DI ADIGE 7',1
 
 		SELECT	@Stato = Id_Stato
 		FROM	Custom.AnagraficaDdtFittizi

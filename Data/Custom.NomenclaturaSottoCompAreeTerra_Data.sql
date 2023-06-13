@@ -1,3 +1,4 @@
+INSERT INTO [Custom].[NomenclaturaSottoCompAreeTerra] ([Id_Sottocomponente], [Codice_Area]) VALUES (5105, 'Adige 1')
 INSERT INTO [Custom].[NomenclaturaSottoCompAreeTerra] ([Id_Sottocomponente], [Codice_Area]) VALUES (7147, 'P1')
 INSERT INTO [Custom].[NomenclaturaSottoCompAreeTerra] ([Id_Sottocomponente], [Codice_Area]) VALUES (7148, 'V1')
 INSERT INTO [Custom].[NomenclaturaSottoCompAreeTerra] ([Id_Sottocomponente], [Codice_Area]) VALUES (7149, 'P2')

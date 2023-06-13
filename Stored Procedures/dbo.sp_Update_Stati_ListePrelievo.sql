@@ -40,25 +40,8 @@ BEGIN
 		DECLARE @Mancanti			BIT = 0
 
 		--RECORD DUPLICATI, IDTESTATA LISTA INEISTENTE CHE MANDAVA IN ECCEZIONE LA IF QUA SOTTO
-		IF (ISNULL(@Id_Testata_Lista,0) <> 0)
+		IF ISNULL(@Id_Testata_Lista,0) <> 0
 		BEGIN
-			--Controllo fine Lista
-			--SELECT @CountLinee = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE Id_Testata_Lista = @Id_Testata_Lista
-			--SELECT @CountLineeEvase = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE Id_Testata_Lista = @Id_Testata_Lista AND Id_Stato_Missione = 4
-			--SELECT @CountMancanti = COUNT(1) FROM Custom.AnagraficaMancanti WHERE Id_Testata = @Id_Testata_Lista AND Qta_Mancante > 0)
-			
-			--IF (@CountLinee > 0 AND @CountLineeEvase > 0)
-			--BEGIN
-			--	IF (@CountLinee = @CountLineeEvase AND @CountMancanti = 0)
-			--		UPDATE	Custom.TestataListePrelievo
-			--		SET		Stato = 4
-			--		WHERE	ID = @Id_Testata_Lista
-			--	ELSE IF (@CountLinee = @CountLineeEvase AND @CountMancanti > 0)
-			--		UPDATE	Custom.TestataListePrelievo
-			--		SET		Stato = 3
-			--		WHERE	ID = @Id_Testata_Lista
-			--END
-			
 			IF EXISTS(SELECT TOP 1 1 FROM Custom.AnagraficaMancanti WHERE Id_Testata = @Id_Testata_Lista AND Qta_Mancante > 0)
 				SET @Mancanti = 1
 
@@ -78,6 +61,17 @@ BEGIN
 					SET		Stato = 3
 					WHERE	ID = @Id_Testata_Lista
 			END
+
+			DECLARE @Id_Evento_RigheAttive INT
+			SELECT	@Id_Evento_RigheAttive = Id_Evento
+			FROM	EVENTI
+			WHERE	Id_Tipo_Evento = 7
+				AND Xml_Param.value('data(//Parametri//Id_Testata_Lista)[1]','int') = @Id_Testata_Lista
+
+			IF @Id_Evento_RigheAttive IS NOT NULL AND NOT EXISTS (SELECT TOP 1 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @Id_Testata_Lista)
+				DELETE	EVENTI
+				WHERE	Id_Evento = @Id_Evento_RigheAttive
+			
 		END
 
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;

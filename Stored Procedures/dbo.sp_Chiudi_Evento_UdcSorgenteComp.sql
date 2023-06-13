@@ -2,23 +2,13 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROC [dbo].[sp_Sposta_Articolo_Udc_Da_Compattazione]
-	--ID UDC DETTAGLIO  SORGENTE
-	@Id_Evento				INT,
-	@Id_UdcDettaglio		INT,
-	--ID UDC DESTINAZIONE
-	@Id_Udc					INT,
-	--Quantita Da Spostare
-	@Quantita				NUMERIC(10,2)	= NULL,
-	@FlagControlloQualita	BIT,
-	@FlagNonConformita		BIT,
-	@Quantita_Pezzi			NUMERIC(10,2),
-	@Control_Lot			VARCHAR(50),
+CREATE PROCEDURE [dbo].[sp_Chiudi_Evento_UdcSorgenteComp]
+	@Id_Evento			INT,
 	-- Parametri Standard;
-	@Id_Processo			VARCHAR(30),
-	@Origine_Log			VARCHAR(25),
-	@Id_Utente				VARCHAR(16),	
-	@Errore					VARCHAR(500) OUTPUT
+	@Id_Processo		VARCHAR(30),
+	@Origine_Log		VARCHAR(25),
+	@Id_Utente			VARCHAR(32),
+	@Errore				VARCHAR(500) OUTPUT
 AS
 BEGIN
 
@@ -40,39 +30,11 @@ BEGIN
 	-- Se il numero di transazioni è 0 significa ke devo aprirla, altrimenti ne salvo una nidificata;
 	IF @TranCount = 0 BEGIN TRANSACTION;
 
-	BEGIN TRY
-		DECLARE @Id_Udc_Sorgente INT
-		SELECT	@Id_Udc_Sorgente = Id_Udc
-		FROM	dbo.Udc_Dettaglio
-		WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
-
-		IF @Quantita  IS NULL
-			SET @Quantita = @Quantita_Pezzi
-
-		IF EXISTS(SELECT TOP 1 1 FROM dbo.Udc_Testata WHERE Id_Udc = @Id_Udc AND ISNULL(Da_Compattare,0) = 1)
-			AND
-			EXISTS(SELECT TOP 1 1 FROM dbo.Udc_Testata WHERE Id_Udc = @Id_Udc_Sorgente AND ISNULL(Da_Compattare,0) = 1)
-		BEGIN
-			EXEC dbo.sp_Sposta_Articolo_Udc
-					@Id_UdcDettaglio		= @Id_UdcDettaglio,
-					@Id_Udc					= @Id_Udc,
-					@Quantita				= @Quantita,
-					@FlagControlloQualita	= @FlagControlloQualita,
-					@FlagNonConformita		= @FlagNonConformita,
-					@Quantita_Pezzi			= @Quantita_Pezzi,
-					@Control_Lot			= @Control_Lot,
-					@Id_Processo			= @Id_Processo,
-					@Origine_Log			= @Origine_Log,
-					@Id_Utente				= @Id_Utente,
-					@Errore					= @Errore				OUTPUT
-		END
-		ELSE
-			THROW 50009, 'NON E'' POSSIBILE COMPATTARE DUE UDC SE NON SONO ENTRAMBE DA COMPATTARE.',1
-
-		IF NOT EXISTS (SELECT TOP 1 1 FROM dbo.Udc_Dettaglio WHERE Id_Udc = @Id_Udc_Sorgente)
-			DELETE dbo.Eventi
-			WHERE	Id_Evento = @ID_EVENTO
-
+	BEGIN TRY	
+		--Prelievo articolo mancante
+		--SE PROVIENE DA UN UDC CHE DEVE ANDARE IN MODULA CREO LA MISSIONE
+		DELETE	Eventi
+		WHERE	Id_Evento = @Id_Evento
 
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;
 		IF @TranCount = 0 COMMIT TRANSACTION;

@@ -54,9 +54,32 @@ BEGIN
 				@DESTINAZIONE_RAGSOC	VARCHAR(50),
 				@CONSEGNA_DDT			VARCHAR(50)
 				
+		SELECT	@Codice_Articolo = Codice,
+				@Descrizione = Descrizione,
+				@Unita_Misura = Unita_Misura
+		FROM	Articoli WITH(NOLOCK)
+		WHERE	Id_Articolo = @Id_Articolo
+
 		--PICKING LISTA
 		IF (@Id_Tipo_Causale_Movimento = 1)
 		BEGIN
+			;WITH DATI_PRELIEVO AS
+			(
+				SELECT	UD.Id_UdcDettaglio,
+						TLP.ORDER_ID,
+						TLP.ORDER_TYPE,
+						RLP.PROD_ORDER,
+						CASE WHEN TLP.ORDER_TYPE IN ('STS','PAT','PCL') THEN substring(TLP.DES_PREL_CONF,1,50) ELSE RLP.PROD_LINE END		PROD_LINE,
+						ISNULL(RLP.DOC_NUMBER,'')						DOC_NUMBER
+				FROM	Udc_Dettaglio				UD WITH(NOLOCK)
+				JOIN	Custom.RigheListePrelievo	RLP
+				ON		UD.Id_Riga_Lista_Prelievo = RLP.ID
+					AND RLP.ITEM_CODE = @Codice_Articolo
+				JOIN	Custom.TestataListePrelievo	TLP
+				ON		UD.Id_Testata_Lista_Prelievo = TLP.ID
+				WHERE	UD.Id_Udc = @Id_Udc
+					AND UD.Id_Articolo = @Id_Articolo
+			)
 			SELECT	@IdTestataLP = Id_Testata_Lista_Prelievo,
 					@IdRigaLP = Id_Riga_Lista_Prelievo,
 					@CausaleL3Mov = Id_Causale_L3,
@@ -70,18 +93,15 @@ BEGIN
 					- Consegna					DOC_NUMBER	RIGA
 					*/
 
-					@CODICE_ORDINE			= TLP.ORDER_ID,
-					@CAUSALE				= TLP.ORDER_TYPE,
-					@PROD_ORDER_LOTTO		= RLP.PROD_ORDER,
-					@DESTINAZIONE_RAGSOC	= CASE WHEN TLP.ORDER_TYPE IN ('STS','PAT','PCL') THEN substring(TLP.DES_PREL_CONF,1,50) ELSE RLP.PROD_LINE END,
-					@CONSEGNA_DDT			= ISNULL(RLP.DOC_NUMBER,'')
+					@CODICE_ORDINE			= DP.ORDER_ID,
+					@CAUSALE				= DP.ORDER_TYPE,
+					@PROD_ORDER_LOTTO		= DP.PROD_ORDER,
+					@DESTINAZIONE_RAGSOC	= DP.PROD_LINE,
+					@CONSEGNA_DDT			= DP.DOC_NUMBER
 			FROM	Udc_Dettaglio				UD WITH(NOLOCK)
 			LEFT
-			JOIN	Custom.RigheListePrelievo	RLP
-			ON		UD.Id_Riga_Lista_Prelievo = RLP.ID
-			LEFT
-			JOIN	Custom.TestataListePrelievo	TLP
-			ON		UD.Id_Testata_Lista_Prelievo = TLP.ID
+			JOIN	DATI_PRELIEVO				DP
+			ON		DP.Id_UdcDettaglio = UD.Id_UdcDettaglio
 			WHERE	Id_Udc = @Id_Udc
 				AND Id_Articolo = @Id_Articolo
 
@@ -104,6 +124,27 @@ BEGIN
 
 		--CARICO DA LISTA
 		ELSE IF (@Id_Tipo_Causale_Movimento = 7)
+		BEGIN
+			;WITH DATI_DDT AS
+			(
+				SELECT	UD.Id_UdcDettaglio,
+						toe.ID,
+						roe.LOAD_LINE_ID,
+						TOE.LOAD_ORDER_TYPE,
+						ROE.PURCHASE_ORDER_ID,
+						TOE.DES_SUPPLIER_CODE,
+						TOE.SUPPLIER_DDT_CODE,
+						ROE.CONTROL_LOT
+				FROM	Udc_Dettaglio					UD WITH(NOLOCK)
+				JOIN	Custom.RigheOrdiniEntrata		ROE
+				ON		ROE.LOAD_LINE_ID = UD.Id_Riga_Ddt
+					AND ROE.ITEM_CODE = @CODICE_ARTICOLO
+				JOIN	Custom.TestataOrdiniEntrata		TOE
+				ON		ROE.Id_Testata = TOE.ID
+					and TOE.ID = UD.Id_Ddt_Reale
+				WHERE	Id_Udc = @Id_Udc
+					AND Id_Articolo = @Id_Articolo
+			)
 			SELECT	@IdTestataDDT = Id_Ddt_Reale,
 					@IdRigaDDT = Id_Riga_Ddt,
 					@CausaleL3Mov = Id_Causale_L3,
@@ -115,21 +156,18 @@ BEGIN
 					- Numero ddt			CODICE_ORDINE_ACQUISTO
 					- Nr lotto
 					*/
-					@CAUSALE				= TOE.LOAD_ORDER_TYPE,
-					@CODICE_ORDINE			= ROE.PURCHASE_ORDER_ID,
-					@DESTINAZIONE_RAGSOC	= TOE.DES_SUPPLIER_CODE,
-					@CONSEGNA_DDT			= TOE.SUPPLIER_DDT_CODE,
-					@PROD_ORDER_LOTTO		= ROE.CONTROL_LOT
+					@CAUSALE				= DD.LOAD_ORDER_TYPE,
+					@CODICE_ORDINE			= DD.PURCHASE_ORDER_ID,
+					@DESTINAZIONE_RAGSOC	= DD.DES_SUPPLIER_CODE,
+					@CONSEGNA_DDT			= DD.SUPPLIER_DDT_CODE,
+					@PROD_ORDER_LOTTO		= DD.CONTROL_LOT
 			FROM	Udc_Dettaglio					UD WITH(NOLOCK)
 			LEFT
-			JOIN	Custom.RigheOrdiniEntrata		ROE
-			ON		ROE.LOAD_LINE_ID = UD.Id_Riga_Ddt
-			LEFT
-			JOIN	Custom.TestataOrdiniEntrata		TOE
-			ON		ROE.Id_Testata = TOE.ID
+			JOIN	DATI_DDT			DD
+			ON		DD.Id_UdcDettaglio = UD.Id_UdcDettaglio
 			WHERE	Id_Udc = @Id_Udc
 				AND Id_Articolo = @Id_Articolo
-				
+		END
 		--CANCELLAZIONE
 		ELSE IF (@Id_Tipo_Causale_Movimento = 6)
 			SELECT	@IdTestataLP = Id_Testata_Lista_Prelievo,
@@ -141,11 +179,6 @@ BEGIN
 			WHERE	Id_Udc = @Id_Udc
 				AND Id_Articolo = @Id_Articolo
 
-		SELECT	@Codice_Articolo = Codice,
-				@Descrizione = Descrizione,
-				@Unita_Misura = Unita_Misura
-		FROM	Articoli WITH(NOLOCK)
-		WHERE	Id_Articolo = @Id_Articolo
 
 		SELECT	@Id_Partizione = Id_Partizione 
 		FROM	Udc_Posizione WITH(NOLOCK)
@@ -165,9 +198,7 @@ BEGIN
 				(GETDATE(), @Id_Udc, @Id_Articolo, @Codice_Articolo, @Descrizione,@Lotto,@Unita_Misura,@Qta,@Id_Utente,@Id_Tipo_Causale_Movimento,@Id_Partizione,@Codice_Lista,@Codice_Riga,@Codice_Udc,
 					@DtLotto, @DtScadenza, @CausaleL3Mov, @IdTestataLP, @IdRigaLP, @IdTestataDDT, @IdRigaDDT, NULL
 					,@CODICE_ORDINE,@CAUSALE,@PROD_ORDER_LOTTO,@DESTINAZIONE_RAGSOC,@CONSEGNA_DDT)
- 
 
-		SELECT TOP 100  * FROM dbo.Movimenti ORDER BY Data_Movimento DESC
 		-- Fine del codice;
 
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;

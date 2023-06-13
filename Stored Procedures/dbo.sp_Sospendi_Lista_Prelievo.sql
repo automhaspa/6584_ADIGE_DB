@@ -69,6 +69,19 @@ BEGIN
 			AND Id_Udc <> 702
 			AND Id_Stato_Missione NOT IN (3,4)
 
+
+		IF EXISTS(SELECT TOP 1 1 FROM EVENTI WHERE Id_Tipo_Evento = 7 AND Xml_Param.value('data(//Parametri//Id_Testata_Lista)[1]','int') = @ID)
+		BEGIN
+			DECLARE @ID_EVENTO INT
+
+			SELECT	@ID_EVENTO = Id_Evento
+			FROM	EVENTI
+			WHERE	Id_Tipo_Evento = 7 AND Xml_Param.value('data(//Parametri//Id_Testata_Lista)[1]','int') = @ID
+
+			DELETE	EVENTI
+			WHERE	Id_Evento = @ID_EVENTO
+		END
+
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;
 		IF @TranCount = 0 COMMIT TRANSACTION;
 		-- Return 0 se tutto è andato a buon fine;

@@ -2,6 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
 CREATE VIEW [AwmConfig].[vRighePrelievoAttive] AS
 SELECT	mpd.Id_Udc,
 		mpd.Id_Articolo,
@@ -15,7 +16,7 @@ SELECT	mpd.Id_Udc,
 			WHEN up.Id_Partizione = 9101														THEN 'MODULA'
 			WHEN (ISNULL(vdi.ID_PARTIZIONE, 0) <> 0) OR (ISNULL(vas.ID_PARTIZIONE, 0) <> 0)		THEN
 				CASE
-					WHEN UT.Id_Tipo_Udc = 'M' THEN 'INGOMBRANTI_M'
+					WHEN UT.Id_Tipo_Udc = 'M' THEN 'ING_ADIGE_1'
 					ELSE 'INGOMBRANTI'
 				END
 			ELSE 'AUTOMHA'
@@ -23,6 +24,7 @@ SELECT	mpd.Id_Udc,
 		CASE
 			WHEN up.Id_Partizione = 9101														THEN 'MAGAZZINO MODULA'
 			--Ingombrante
+			WHEN ISNULL(vdi.ID_PARTIZIONE, 0) <> 0 AND VDI.DESCRIZIONE LIKE '%ADIGE%'			THEN VDI.DESCRIZIONE
 			WHEN ISNULL(vdi.ID_PARTIZIONE, 0) <> 0												THEN CONCAT ('SCAFFALE: ', vdi.DESCRIZIONE, ' COLONNA: ', vdi.COLONNA , ' PIANO: ', vdi.PIANO)	  
 			WHEN ISNULL(vas.Id_Partizione, 0) <> 0												THEN vas.DESCRIZIONE_AREA
 			ELSE p.DESCRIZIONE

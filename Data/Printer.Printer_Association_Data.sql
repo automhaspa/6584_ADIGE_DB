@@ -6,3 +6,4 @@ INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALU
 INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (7, 3301)
 INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (9, 3302)
 INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (10, 3701)
+INSERT INTO [Printer].[Printer_Association] ([Id_Printer], [Id_Partizione]) VALUES (11, 7685)

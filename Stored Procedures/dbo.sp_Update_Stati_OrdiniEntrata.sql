@@ -40,14 +40,13 @@ BEGIN
 	BEGIN TRY
 		--Se ho specificato Id_Riga e Id_Testata significa che provengo da specializzazione manuale
 		--Controllo la quantità rimanente per fare l'update dello stato riga
-		IF (ISNULL(@Id_Riga, '') <> '' AND ISNULL(@Id_Testata, '') <> '')
+		IF ISNULL(@Id_Riga, 0) <> 0 AND ISNULL(@Id_Testata, 0) <> 0
 		BEGIN
 			IF @FlagChiusura = 0
 			BEGIN
-				DECLARE @QuantitaRimanenteRiga	NUMERIC(10,2)
+				DECLARE @QuantitaRimanenteRiga	NUMERIC(10,2) = 0
 
-				--DIFFERENZIAZIONE TRA EVENTO INGOMBRANTI E EVENTO IN BAIA PER  PUNTARE A 2 VISTE DIVERSE
-				--E' UNA STRONZATA MA C'E' STATO UN CAMBIAMENTO NEI FLUSSI NON PREVISTO....
+				--DIFFERENZIAZIONE TRA EVENTO INGOMBRANTI E EVENTO IN BAIA PER  PUNTARE A 2 VISTE DIVERSE E' UNA STRONZATA MA C'E' STATO UN CAMBIAMENTO NEI FLUSSI NON PREVISTO
 				IF @SpecIngombranti = 1
 					SELECT	@QuantitaRimanenteRiga = QUANTITA_RIMANENTE_DA_SPECIALIZZARE
 					FROM	AwmConfig.vRigheDdtDaSpcCompleta
@@ -59,9 +58,8 @@ BEGIN
 					WHERE	ID_RIGA = @Id_Riga
 						AND Id_Testata = @Id_Testata
 
-				--Se ho specializzato tutta
+				--Se ho specializzato tutta Aggiorno lo stato a elaborato
 				IF @QuantitaRimanenteRiga = 0
-					--Aggiorno lo stato a elaborato
 					UPDATE	Custom.RigheOrdiniEntrata
 					SET		Stato = 2
 					WHERE	LOAD_LINE_ID = @Id_Riga
@@ -82,7 +80,7 @@ BEGIN
 			DECLARE @CountLineeChiuse	INT = (SELECT COUNT(1) FROM Custom.RigheOrdiniEntrata WHERE Id_Testata = @Id_Testata AND Stato = 2)
 			
 			--Stato chiuso
-			IF (@CountLinee = @CountLineeChiuse)
+			IF @CountLinee = @CountLineeChiuse
 			BEGIN
 				UPDATE	Custom.TestataOrdiniEntrata
 				SET		Stato = 3

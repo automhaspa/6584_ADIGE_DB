@@ -2,6 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
 CREATE PROCEDURE [dbo].[sp_Gest_Picking_Ingombrante]
 	@Id_Udc					INT,
 	@Id_Articolo			INT,
@@ -116,7 +117,7 @@ BEGIN
 							SELECT	TOP 1 1
 							FROM	AwmConfig.vRighePrelievoAttive
 							WHERE	Id_Testata_Lista = @Id_Testata_Lista
-								AND Nome_Magazzino = 'INGOMBRANTI'
+								AND Nome_Magazzino IN ('INGOMBRANTI','ING_ADIGE_1')
 						)
 		BEGIN
 			IF @Id_Evento IS NULL
@@ -130,6 +131,7 @@ BEGIN
 				WHERE	Id_Evento = @Id_Evento
 		END
 
+		
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;
 		IF @TranCount = 0 COMMIT TRANSACTION;
 		-- Return 0 se tutto è andato a buon fine;

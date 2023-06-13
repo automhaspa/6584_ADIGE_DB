@@ -3,6 +3,7 @@ GO
 SET ANSI_NULLS ON
 GO
 
+
 CREATE PROCEDURE [dbo].[sp_Delete_PuliziaStorico]
 	@MessagesExpireDays		INT = 7,
 	@LogExpireDays			INT = 30,
@@ -43,8 +44,10 @@ BEGIN
 		DELETE ApplicationsLog		WHERE DATEDIFF(DAY,TimeStamp,GETDATE())				>= @LogExpireDays
 
 
-		DELETE Printer.PrinterRequest WHERE DATEDIFF(DAY,Data_Esecuzione,GETDATE())		>= @LogExpireDays AND Id_Tipo_Stato_Messaggio <> 1
- 		--DELETE Log					WHERE DATEDIFF(DAY,DataOra_Log,GETDATE())			>= @LogExpireDays
+		DELETE Printer.PrinterRequest	WHERE DATEDIFF(DAY,Data_Esecuzione,GETDATE())		>= 7 AND Id_Tipo_Stato_Messaggio <> 1
+ 		DELETE Log						WHERE DATEDIFF(DAY,DataOra_Log,GETDATE())			>= 7 AND Proprietà_Log = 'Tempistiche'
+		DELETE Log						WHERE DATEDIFF(DAY,DataOra_Log,GETDATE())			>= 30 AND Origine_Log = 'l3integration.sp_Modula_I'
+
 		
 		--DELETE Missioni_Storico		WHERE DATEDIFF(DAY,Data,GETDATE())					>= @MissionExpireDays
 		--									AND Codice_Udc NOT IN (SELECT Codice_Udc FROM Udc_Testata)

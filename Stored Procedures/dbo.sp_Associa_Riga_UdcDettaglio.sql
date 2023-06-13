@@ -39,7 +39,7 @@ BEGIN
 
 	BEGIN TRY
 		--Controllo le quantità inserito del articolo
-		DECLARE @QuantitaRimanenteArticolo	NUMERIC(10,4)
+		DECLARE @QuantitaRimanenteArticolo	NUMERIC(10,4) = -1
 		DECLARE @IdUDcDettaglio				INT = NULL
 		DECLARE @Ingombrante				BIT
 		DECLARE @IdTipoUdc					VARCHAR(1)
@@ -52,12 +52,15 @@ BEGIN
 		FROM	dbo.Udc_Testata
 		WHERE	Id_Udc = @Id_Udc
 
+		IF @Quantita_Articolo = 0
+			THROW 50001, 'IMPOSSIBILE SPECIALIZZARE QUANTITA A 0',1;
+
 		SELECT	@QuantitaRimanenteArticolo =  ISNULL(QUANTITA_RIMANENTE_DA_SPECIALIZZARE, -1)
 		FROM	AwmConfig.vQtaRimanentiRigheDdt
 		WHERE	ID_RIGA = @NUMERO_RIGA
 			AND Id_Testata = @Id_Testata
 
-		IF @QuantitaRimanenteArticolo = -1
+		IF @QuantitaRimanenteArticolo <= 0
 			THROW 50001, 'QUANTITA'' RIMANENTE NON TROVATA PER LA RIGA IN QUESTIONE',1;
 
 		--Se la quantità rilevata di un articolo è maggiore de
@@ -84,23 +87,23 @@ BEGIN
 
 		--Altrimenti aggiorno quantità
 		EXEC [dbo].[sp_Update_Aggiorna_Contenuto_Udc]
-						@Id_Udc					= @Id_Udc,
-						@Id_UdcDettaglio		= @IdUDcDettaglio,
-						@Id_Articolo			= @Id_Articolo,
-						@Qta_Pezzi_Input		= @Quantita_Articolo,
-						@Id_Causale_Movimento	= 7,
-						@Flag_FlVoid			= 0,
-						@FlagControlloQualita	= @CONTROLLO_QUALITA,
-						@Motivo_CQ				= @Motivo_Controllo_Qualita,
-						@Id_Ddt_Reale			= @Id_Testata,
-						@Id_Riga_Ddt			= @NUMERO_RIGA,
-						@WBS_CODE				= @WBS_Riferimento,
-						@CONTROL_LOT			= @CONTROL_LOT,
-						@DOPPIO_STEP_QM			= @DOPPIO_STEP_QM,
-						@Id_Processo			= @Id_Processo,
-						@Origine_Log			= @Origine_Log,
-						@Id_Utente				= @Id_Utente,
-						@Errore					= @Errore			OUTPUT
+				@Id_Udc					= @Id_Udc,
+				@Id_UdcDettaglio		= @IdUDcDettaglio,
+				@Id_Articolo			= @Id_Articolo,
+				@Qta_Pezzi_Input		= @Quantita_Articolo,
+				@Id_Causale_Movimento	= 7,
+				@Flag_FlVoid			= 0,
+				@FlagControlloQualita	= @CONTROLLO_QUALITA,
+				@Motivo_CQ				= @Motivo_Controllo_Qualita,
+				@Id_Ddt_Reale			= @Id_Testata,
+				@Id_Riga_Ddt			= @NUMERO_RIGA,
+				@WBS_CODE				= @WBS_Riferimento,
+				@CONTROL_LOT			= @CONTROL_LOT,
+				@DOPPIO_STEP_QM			= @DOPPIO_STEP_QM,
+				@Id_Processo			= @Id_Processo,
+				@Origine_Log			= @Origine_Log,
+				@Id_Utente				= @Id_Utente,
+				@Errore					= @Errore			OUTPUT
 
 		--Se non ho errori nella creazione dell'udc_dettaglio
 		IF (ISNULL(@Errore, '') <> '')
@@ -131,10 +134,10 @@ BEGIN
 				@Id_Utente			= @Id_Utente,
 				@Errore				= @Errore OUTPUT
 
-		IF (ISNULL(@Errore, '') <> '')
+		IF ISNULL(@Errore, '') <> ''
 			THROW 50006, @Errore, 1
 
-		 --GESTIONE MANCANTI --Se la quantita specializzata è conforme
+		--GESTIONE MANCANTI --Se la quantita specializzata è conforme
 		IF	@CONTROLLO_QUALITA = 0
 				AND
 			@DOPPIO_STEP_QM = 0

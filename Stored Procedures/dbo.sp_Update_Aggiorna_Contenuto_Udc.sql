@@ -2,7 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[sp_Update_Aggiorna_Contenuto_Udc]
+CREATE PROC [dbo].[sp_Update_Aggiorna_Contenuto_Udc]
 	@Id_Udc					INT				= NULL,
 	@Id_UdcDettaglio		INT				= NULL,
 	@Id_Articolo			INT				= NULL,
@@ -33,18 +33,25 @@ CREATE PROCEDURE [dbo].[sp_Update_Aggiorna_Contenuto_Udc]
 	--Campi dedicati al controllo qualità 
 	@FlagControlloQualita	BIT = 0,
 	@Motivo_CQ				varchar(MAX)	= NULL,
+
+	@FlagNonConforme		BIT = 0,
+	@Motivo_NC				VARCHAR(MAX)	= NULL,
+
 	--Parameteri Liste Di prelievo Nuove
-	@Id_Riga_Lista			int				= NULL,
-	@Id_Testata_Lista		int				= NULL,
+	@Id_Riga_Lista			INT				= NULL,
+	@Id_Testata_Lista		INT				= NULL,
 	--MOVIMENTAZIONE MANUALE CAMPI L3
-	@SUPPLIER_CODE			varchar(500)	= NULL,
-	@REASON					varchar(500)	= NULL,
-	@REF_NUMBER				varchar(500)	= NULL,
-	@DOC_NUMBER				varchar(500)	= NULL,
+	@SUPPLIER_CODE			VARCHAR(500)	= NULL,
+	@REASON					VARCHAR(500)	= NULL,
+	@REF_NUMBER				VARCHAR(500)	= NULL,
+	@DOC_NUMBER				VARCHAR(500)	= NULL,
 	@RETURN_DATE			DATE			= NULL,
 	@NOTES					VARCHAR(150)	= NULL,
 	--LA SETTO SOLO QUANDO SPLITTO I DETTAGLIO (EX CAMBIO WBS) IN MODO TALE DA NON PERDERE LA DATA CREAZIONE REALE
 	@Data_Creazione			DATETIME		= NULL,
+
+	--Se si tratta di invio a modula in fase di specializzazione non devo MAI inviare consuntivo a SAP ci penserà poi MODULA a consuntivare
+	@Invio_Consuntivo		BIT				= 1,
 	-- Parametri Standard;
 	@Id_Processo			VARCHAR(30),
 	@Origine_Log			VARCHAR(25),
@@ -279,6 +286,9 @@ BEGIN
 			IF @FlagControlloQualita = 1
 				THROW 50100, 'IMPOSSIBILE PRELEVARE UN ARTICOLO SOGGETTO A CONTROLLO QUALITA''',1
 				
+			IF @FlagNonConforme = 1
+				THROW 50100, 'IMPOSSIBILE PRELEVARE UN ARTICOLO SOGGETTO A NON CONFORMITA''',1
+				
 			--SE LA QUANTITA DA PRELEVARE E' MAGGIORE RISPETTO ALLA GIACENZA CONTENUTA NELLA CASSETTA ALLORA TIRO FUORI UN ECCEZIONE
 			IF	@Qta_Pezzi_Input > @Qta_Giacenza
 				THROW 50001, 'SpEx_QtaGiacenzaNotEnough', 1
@@ -343,6 +353,30 @@ BEGIN
 						IF (ISNULL(@Errore, '') <> '')
 							RAISERROR(@Errore, 12, 1)
 					END
+
+					IF @FlagNonConforme = 1
+					BEGIN
+						--Se esiste già una quantita di quell articolo flaggata in cq aggiungo la quantita' che sto passando adesso
+						IF	EXISTS	(
+										SELECT	TOP 1 1
+										FROM	Custom.NonConformita
+										WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+											AND ISNULL(CONTROL_LOT,'') = ISNULL(@CONTROL_LOT,'')
+									)
+							UPDATE	Custom.NonConformita
+							SET		Quantita = Quantita + @Qta_Pezzi_Input,
+									MotivoNonConformita= ISNULL(@Motivo_NC,MotivoNonConformita)
+							WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+								AND ISNULL(CONTROL_LOT,'') = ISNULL(@CONTROL_LOT,'')
+						ELSE
+							INSERT INTO Custom.NonConformita
+								(Id_UdcDettaglio,Quantita, MotivoNonConformita,CONTROL_LOT)
+							VALUES
+								(@Id_UdcDettaglio, @Qta_Pezzi_Input, @Motivo_NC, ISNULL(@CONTROL_LOT,''))
+
+						IF (ISNULL(@Errore, '') <> '')
+							RAISERROR(@Errore, 12, 1)
+					END
 				END
 			END
 			ELSE
@@ -367,19 +401,25 @@ BEGIN
 					AND Id_Articolo = @Id_Articolo
 					AND ISNULL(WBS_Riferimento,'') = ISNULL(@WBS_CODE,'')
 
+				IF @CONTROL_LOT IN ('000000000000','.','') 
+					SET @CONTROL_LOT = ''
+
 				IF @FlagControlloQualita = 1
 				BEGIN
-					IF @CONTROL_LOT IN ('000000000000','.','') 
-						SET @CONTROL_LOT = ''
-
 					--INSERISCO IN CONTROLLO QUALITA
 					INSERT INTO Custom.ControlloQualita
 						(Id_UdcDettaglio,Quantita, MotivoQualita,Doppio_Step_QM,CONTROL_LOT,Id_Utente)
 					VALUES
 						(@Id_UdcDettaglio, @Qta_Pezzi_Input, @Motivo_CQ,@DOPPIO_STEP_QM, ISNULL(@CONTROL_LOT,''), ISNULL(@USERNAME, @Id_Utente))
+				END
 
-					IF ISNULL(@Errore, '') <> ''
-						RAISERROR(@Errore, 12, 1)
+				IF @FlagNonConforme = 1
+				BEGIN
+					--INSERISCO IN CONTROLLO QUALITA
+					INSERT INTO Custom.NonConformita
+						(Id_UdcDettaglio,Quantita, MotivoNonConformita,CONTROL_LOT)
+					VALUES
+						(@Id_UdcDettaglio, @Qta_Pezzi_Input, @Motivo_NC, ISNULL(@CONTROL_LOT,''))
 				END
 			END
 			
@@ -393,23 +433,26 @@ BEGIN
 								AND Id_Partizione NOT IN (9104, 9105, 9106) --> AREE A TERRA DELLE BAIE DI SPECIALIZZAZIONE
 						)
 			BEGIN
-				--INVIO CONSUNTIVO L3
-				EXEC [dbo].[sp_Genera_Consuntivo_EntrataLista]
-							@Id_Udc				= @Id_Udc,
-							@Id_Testata_Ddt		= @Id_Ddt_Reale,
-							@Id_Riga_Ddt		= @Id_Riga_Ddt,
-							@Qta_Entrata		= @Qta_Pezzi_Input,
-							@Fl_Quality_Check	= @FlagControlloQualita,
-							@Doppio_Step_QM		= @DOPPIO_STEP_QM,
-							@Fl_Void			= @Flag_FlVoid,
-							@USERNAME			= NULL,
-							@Id_Processo		= @Id_Processo,
-							@Origine_Log		= @Origine_Log,
-							@Id_Utente			= @Id_Utente,
-							@Errore				= @Errore			OUTPUT
+				IF ISNULL(@Invio_Consuntivo,1) = 1
+				BEGIN
+					--INVIO CONSUNTIVO L3
+					EXEC [dbo].[sp_Genera_Consuntivo_EntrataLista]
+								@Id_Udc				= @Id_Udc,
+								@Id_Testata_Ddt		= @Id_Ddt_Reale,
+								@Id_Riga_Ddt		= @Id_Riga_Ddt,
+								@Qta_Entrata		= @Qta_Pezzi_Input,
+								@Fl_Quality_Check	= @FlagControlloQualita,
+								@Doppio_Step_QM		= @DOPPIO_STEP_QM,
+								@Fl_Void			= @Flag_FlVoid,
+								@USERNAME			= NULL,
+								@Id_Processo		= @Id_Processo,
+								@Origine_Log		= @Origine_Log,
+								@Id_Utente			= @Id_Utente,
+								@Errore				= @Errore			OUTPUT
 
 					IF ISNULL(@Errore, '') <> ''
 						THROW 50006, @Errore, 1
+				END
 			END
 
 			--SE SONO IN 2STEP QM ALLORA VADO IN CONTROLLO QUALITA'

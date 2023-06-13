@@ -121,6 +121,7 @@ BEGIN
 				@QuantitaConforme		= @QuantitaConforme,
 				@QtaNonConforme			= @QtaNonConforme,
 				@MotivoNonConformita	= @MotivoNonConformita,
+				@id_partizione_evento	= 3701,
 				@DA_SAP					= 1,
 				@Id_Processo			= @Id_Processo,
 				@Origine_Log			= @Origine_Log,

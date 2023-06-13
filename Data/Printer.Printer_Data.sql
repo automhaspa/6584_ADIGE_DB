@@ -6,4 +6,5 @@ INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port
 INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (7, 'PZA003', 'Zpl', '10.13.10.24', 9100)
 INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (8, 'PZA007', 'Zpl', '10.13.10.159', 9100)
 INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (9, 'PZA008', 'Zpl', '10.13.10.159', 9100)
-INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (10, 'PZA009', 'Zpl', '10.13.10.57', 9100)
+INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (10, 'PZA009', 'Zpl', '10.13.10.123', 9100)
+INSERT INTO [Printer].[Printer] ([Id_Printer], [Name], [Type], [IpAdress], [Port]) VALUES (11, 'PZA010', 'Zpl', '10.2.9.20', 9100)

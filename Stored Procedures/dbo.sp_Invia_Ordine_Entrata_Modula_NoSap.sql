@@ -5,7 +5,7 @@ GO
 
 
 CREATE PROC [dbo].[sp_Invia_Ordine_Entrata_Modula_NoSap]
-	@Id_UdcDettaglio	INT,
+	@Id_Udc				INT,
 	-- Parametri Standard;
 	@Id_Processo		VARCHAR(30),
 	@Origine_Log		VARCHAR(25),
@@ -34,12 +34,28 @@ BEGIN
 	BEGIN TRY
 		-- Dichiarazioni Variabili;
 		DECLARE @Id_Testata			INT = 1
-
-		SELECT	@Id_Testata = MAX(CAST(SUBSTRING(LOAD_ORDER_ID,LEN(LOAD_ORDER_ID) - CHARINDEX(LOAD_ORDER_ID,'AWM'),LEN(LOAD_ORDER_ID)) AS INT))
+		SELECT	@Id_Testata = MAX(CAST(SUBSTRING(LOAD_ORDER_ID,LEN(LOAD_ORDER_ID) - CHARINDEX(LOAD_ORDER_ID,'AWM'),LEN(LOAD_ORDER_ID)) AS INT)) +1
 		FROM	MODULA.HOST_IMPEXP.dbo.HOST_INCOMING_ORDERS
 		WHERE	LOAD_ORDER_ID LIKE 'AWM%'
 
-		DECLARE @Id_Testata_String	VARCHAR(MAX) = CONCAT('AWM',@Id_Testata)
+		IF ISNULL(@Id_Testata,0) = 0
+			SET @Id_Testata = 1
+
+		DECLARE @Id_Testata_String	VARCHAR(MAX) = CONCAT('AWM',@Id_Testata,'|',@Id_Udc)
+		INSERT INTO Custom.TestataOrdiniEntrata
+		(LOAD_ORDER_ID,LOAD_ORDER_TYPE,DT_RECEIVE_BLM,SUPPLIER_CODE,DES_SUPPLIER_CODE,SUPPLIER_DDT_CODE,Id_Ddt_Fittizio,Stato)
+		VALUES
+		(@Id_Testata_String,'NOS',GETDATE(),'','','',1,1)
+
+		SELECT @Id_Testata = SCOPE_IDENTITY()
+
+		INSERT INTO Custom.RigheOrdiniEntrata
+		(Id_Testata,LOAD_LINE_ID,ITEM_CODE,QUANTITY,FL_INDEX_ALIGN,FL_QUALITY_CHECK,Stato)
+			SELECT	@Id_Testata,ISNULL(UD.Id_Riga_Ddt,1),A.Codice,UD.Quantita_Pezzi,0,0,1
+			FROM	dbo.Udc_Dettaglio	UD
+			JOIN	dbo.Articoli		A
+			ON		A.Id_Articolo = UD.Id_Articolo
+			WHERE	UD.Id_Udc = @Id_Udc
 
 		DECLARE @Id_Missione				INT = 0;
 		DECLARE @Id_Partizione_Destinazione INT = 9101 --CABLATO ID_UDC MODULA  = 702 --Id_partizione_Destinazione 9A01
@@ -56,41 +72,37 @@ BEGIN
 		END
 
 		SET XACT_ABORT ON
-		--(MIS_IdMissione)  LA quantita che movimento è pari alla quantità pezzi presente sull'Udc
-		
 		INSERT INTO MODULA.HOST_IMPEXP.dbo.HOST_INCOMING_LINES
-		SELECT	@Id_Testata_String, 
-				A.CODICE,
-				CONCAT('n_' , 1),
-				ud.Quantita_Pezzi,
+			(LOAD_ORDER_ID,ITEM_CODE,PURCHASE_ORDER_ID_LOAD_LINE_ID,QUANTITY,LOAD_ORDER_TYPE,FL_INDEX_ALIGN,MANUFACTURER_ITEM,MANUFACTURER_NAME,ERRORE)
+		SELECT	TOE.LOAD_ORDER_ID,
+				roe.ITEM_CODE,
+				CONCAT('n_' , LOAD_LINE_ID),
+				QUANTITY,
 				'NOS',
-				' ',
-				' ',
-				' ',
+				CAST(roe.FL_INDEX_ALIGN as varchar(40)),
+				roe.MANUFACTURER_ITEM,
+				roe.MANUFACTURER_NAME,
 				NULL
-		FROM	Udc_Dettaglio		UD
-		JOIN	Articoli			A
-		ON		A.Id_Articolo = UD.Id_Articolo
-		WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+		FROM	Custom.RigheOrdiniEntrata	ROE
+		JOIN	Custom.TestataOrdiniEntrata	TOE
+		ON		TOE.ID = ROE.Id_Testata
+		WHERE	Id_Testata = @Id_Testata
+			AND LOAD_LINE_ID = 1
 
 		INSERT INTO MODULA.HOST_IMPEXP.dbo.HOST_INCOMING_ORDERS
-		SELECT	@Id_Testata_String,
-				'NOS',
-				' '		SUPPLIER_CODE,
-				' '		DES_SUPPLIER_CODE,
-				' '		SUPPLIER_DDT_CODE,
-				' '		DT_RECEIVE_BLM,
+			(LOAD_ORDER_ID,LOAD_ORDER_TYPE,SUPPLIER_CODE,DES_SUPPLIER_CODE,SUPPLIER_DDT_CODE,DT_RECEIVE,
+				ERRORE,ORD_TIPOOP,ORD_DES)
+		SELECT	LOAD_ORDER_ID,LOAD_ORDER_TYPE,SUPPLIER_CODE,DES_SUPPLIER_CODE,SUPPLIER_DDT_CODE,DT_RECEIVE_BLM,
 				NULL,
 				' ',
 				' '
-		FROM	Udc_Dettaglio
-		WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
-
+		FROM	Custom.TestataOrdiniEntrata
+		WHERE	ID = @Id_Testata
 		SET XACT_ABORT OFF
-		
+				
 		--Inserisco la Missione AreaATerra---->Magazzino Modula per l'udc
 		EXEC @Return = dbo.sp_Insert_CreaMissioni
-				@Id_Udc						= 702,
+				@Id_Udc						= @Id_Udc,
 				@Id_Partizione_Destinazione = @Id_Partizione_Destinazione,
 				@Id_Tipo_Missione			= 'MTM',
 				@Id_Missione				= @ID_MISSIONE	OUTPUT,

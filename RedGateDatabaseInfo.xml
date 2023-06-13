@@ -5,7 +5,9 @@
   <DefaultSchema>dbo</DefaultSchema>
   <DefaultUser>dbo</DefaultUser>
   <DefaultFilegroup>PRIMARY</DefaultFilegroup>
-  <DatabaseVersion>15</DatabaseVersion>
+  <DatabaseVersion>14</DatabaseVersion>
+  <CompatibilityLevel>1</CompatibilityLevel>
+  <EngineEdition>Enterprise</EngineEdition>
   <IsAzure>False</IsAzure>
   <ScriptFolderType>Default</ScriptFolderType>
   <MaxDataFileSize>10485760</MaxDataFileSize>
@@ -63,15 +65,56 @@
   </WriteToFileOptions>
   <DataFileSet>
     <Count>78</Count>
+    <DataFile>AwmConfig.ActionHeaderLogic_Data.sql</DataFile>
+    <DataFile>AwmConfig.ActionHeaderRole_Data.sql</DataFile>
+    <DataFile>AwmConfig.ActionHeader_Data.sql</DataFile>
+    <DataFile>AwmConfig.ActionParameterSources_Data.sql</DataFile>
+    <DataFile>AwmConfig.ActionParameterWidget_Data.sql</DataFile>
+    <DataFile>AwmConfig.ActionParameter_Data.sql</DataFile>
+    <DataFile>AwmConfig.entityType_Data.sql</DataFile>
+    <DataFile>AwmConfig.FieldsData_Data.sql</DataFile>
+    <DataFile>AwmConfig.filterTypeParameter_Data.sql</DataFile>
+    <DataFile>AwmConfig.FilterType_Data.sql</DataFile>
+    <DataFile>AwmConfig.LocalResource_Data.sql</DataFile>
+    <DataFile>AwmConfig.Navigation_Data.sql</DataFile>
+    <DataFile>AwmConfig.RoutesAutorize_Data.sql</DataFile>
+    <DataFile>AwmConfig.RoutesCustom_Data.sql</DataFile>
+    <DataFile>AwmConfig.Routes_Data.sql</DataFile>
+    <DataFile>Custom.AllocazionePreferenzAreeTerra_Data.sql</DataFile>
+    <DataFile>Custom.CausaliMovimentazione_Data.sql</DataFile>
+    <DataFile>Custom.Magazzini_Data.sql</DataFile>
+    <DataFile>Custom.NomenclaturaPartizAreeTerra_Data.sql</DataFile>
+    <DataFile>Custom.NomenclaturaSottoCompAreeTerra_Data.sql</DataFile>
+    <DataFile>Custom.TipoStatoAnagrafica_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Magazzino_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Ordini_Prelievo_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_Missioni_Picking_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_PrelievoAutomha_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_PrelievoModula_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_Righe_Liste_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_Righe_OrdiniEntrata_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_Testata_ListePrelievo_Data.sql</DataFile>
+    <DataFile>Custom.Tipo_Stato_Testata_OrdiniEntrata_Data.sql</DataFile>
+    <DataFile>dbo.Adiacenze_Composte_Data.sql</DataFile>
+    <DataFile>dbo.Adiacenze_Composte_Esclusione_Data.sql</DataFile>
+    <DataFile>dbo.Adiacenze_Data.sql</DataFile>
+    <DataFile>dbo.Adiacenze_Esclusione_Data.sql</DataFile>
     <DataFile>dbo.Aree_Data.sql</DataFile>
+    <DataFile>dbo.Baie_Data.sql</DataFile>
+    <DataFile>dbo.Componenti_Data.sql</DataFile>
     <DataFile>dbo.fnTempo_Data.sql</DataFile>
     <DataFile>dbo.Parametri_Generali_Data.sql</DataFile>
     <DataFile>dbo.Partizioni_Data.sql</DataFile>
     <DataFile>dbo.Pc_Data.sql</DataFile>
     <DataFile>dbo.Plc_Data.sql</DataFile>
+    <DataFile>dbo.Procedure_Gestione_Messaggi_Data.sql</DataFile>
+    <DataFile>dbo.Procedure_Personalizzate_Gestione_Messaggi_Data.sql</DataFile>
+    <DataFile>dbo.SottoAree_Data.sql</DataFile>
+    <DataFile>dbo.SottoComponenti_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Allerta_Data.sql</DataFile>
     <DataFile>dbo.Tipo_AssAnag_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Associazione_Qta_Data.sql</DataFile>
+    <DataFile>dbo.Tipo_Causali_Movimenti_Aggiuntiva_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Causali_Movimenti_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Check_Eventi_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Componenti_Data.sql</DataFile>
@@ -82,6 +125,7 @@
     <DataFile>dbo.Tipo_Lista_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Log_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Messaggi_Data.sql</DataFile>
+    <DataFile>dbo.Tipo_Missioni_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Orientamento_Udc_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Origine_Eventi_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Partizioni_Data.sql</DataFile>
@@ -95,51 +139,9 @@
     <DataFile>dbo.Tipo_Stato_Percorso_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Udc_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Unita_Misura_Data.sql</DataFile>
-    <DataFile>dbo.Tipo_Visualizzazione_Eventi_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionParameterSources_Data.sql</DataFile>
-    <DataFile>AwmConfig.FilterType_Data.sql</DataFile>
-    <DataFile>AwmConfig.LocalResource_Data.sql</DataFile>
-    <DataFile>AwmConfig.Routes_Data.sql</DataFile>
-    <DataFile>Custom.CausaliMovimentazione_Data.sql</DataFile>
-    <DataFile>Custom.Magazzini_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Magazzino_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Ordini_Prelievo_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_Missioni_Picking_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_PrelievoAutomha_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_PrelievoModula_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_Righe_Liste_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_Righe_OrdiniEntrata_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_Testata_ListePrelievo_Data.sql</DataFile>
-    <DataFile>Custom.Tipo_Stato_Testata_OrdiniEntrata_Data.sql</DataFile>
-    <DataFile>Custom.TipoStatoAnagrafica_Data.sql</DataFile>
-    <DataFile>Printer.Printer_Data.sql</DataFile>
-    <DataFile>dbo.Adiacenze_Data.sql</DataFile>
-    <DataFile>dbo.Baie_Data.sql</DataFile>
-    <DataFile>dbo.Procedure_Gestione_Messaggi_Data.sql</DataFile>
-    <DataFile>dbo.Procedure_Personalizzate_Gestione_Messaggi_Data.sql</DataFile>
-    <DataFile>dbo.SottoAree_Data.sql</DataFile>
-    <DataFile>dbo.Tipo_Causali_Movimenti_Aggiuntiva_Data.sql</DataFile>
-    <DataFile>dbo.Tipo_Missioni_Data.sql</DataFile>
     <DataFile>dbo.Tipo_Valori_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionHeader_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionParameterWidget_Data.sql</DataFile>
-    <DataFile>AwmConfig.entityType_Data.sql</DataFile>
-    <DataFile>AwmConfig.filterTypeParameter_Data.sql</DataFile>
-    <DataFile>AwmConfig.RoutesAutorize_Data.sql</DataFile>
-    <DataFile>AwmConfig.RoutesCustom_Data.sql</DataFile>
-    <DataFile>Custom.AllocazionePreferenzAreeTerra_Data.sql</DataFile>
-    <DataFile>Custom.NomenclaturaPartizAreeTerra_Data.sql</DataFile>
+    <DataFile>dbo.Tipo_Visualizzazione_Eventi_Data.sql</DataFile>
     <DataFile>Printer.Printer_Association_Data.sql</DataFile>
-    <DataFile>dbo.Adiacenze_Composte_Data.sql</DataFile>
-    <DataFile>dbo.Adiacenze_Esclusione_Data.sql</DataFile>
-    <DataFile>dbo.Componenti_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionHeaderLogic_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionHeaderRole_Data.sql</DataFile>
-    <DataFile>AwmConfig.ActionParameter_Data.sql</DataFile>
-    <DataFile>AwmConfig.FieldsData_Data.sql</DataFile>
-    <DataFile>dbo.Adiacenze_Composte_Esclusione_Data.sql</DataFile>
-    <DataFile>dbo.SottoComponenti_Data.sql</DataFile>
-    <DataFile>AwmConfig.Navigation_Data.sql</DataFile>
-    <DataFile>Custom.NomenclaturaSottoCompAreeTerra_Data.sql</DataFile>
+    <DataFile>Printer.Printer_Data.sql</DataFile>
   </DataFileSet>
 </DatabaseInformation>

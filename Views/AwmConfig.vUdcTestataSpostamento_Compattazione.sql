@@ -3,6 +3,9 @@ GO
 SET ANSI_NULLS ON
 GO
 
+
+
+
 CREATE VIEW [AwmConfig].[vUdcTestataSpostamento_Compattazione] AS
 WITH Buffer_Compattazione AS
 (
@@ -14,7 +17,7 @@ WITH Buffer_Compattazione AS
 	ON		P.ID_SOTTOCOMPONENTE = SC.ID_SOTTOCOMPONENTE
 	JOIN	dbo.Componenti			C
 	ON		SC.ID_COMPONENTE = C.ID_COMPONENTE
-	WHERE	PG.Valore = 'true'
+	--WHERE	PG.Valore = 'true'
 )
 SELECT	UT.Id_Udc,
 		UT.Codice_Udc,
@@ -28,6 +31,6 @@ JOIN	dbo.SottoComponenti		SC
 ON		P.ID_SOTTOCOMPONENTE = SC.ID_SOTTOCOMPONENTE
 JOIN	dbo.Componenti			C
 ON		SC.ID_COMPONENTE = C.ID_COMPONENTE
-JOIN	Buffer_Compattazione	BC
-ON		BC.ID_SOTTOAREA = C.ID_SOTTOAREA
+WHERE	C.ID_SOTTOAREA IN (32,34,36,37)
+	OR  P.ID_PARTIZIONE IN (9104,9105,9104,9106)
 GO

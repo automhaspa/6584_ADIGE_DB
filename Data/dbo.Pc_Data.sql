@@ -13,5 +13,5 @@ INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (18, 'BAIA INGOMBRA
 INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (19, 'BAIA SPECIALIZZAZIONE/KITTING', '10.13.10.154')
 INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (20, 'PC UFFICIO CQ', '10.13.11.15')
 INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (21, 'BAIA 3A01', '10.13.10.38')
-INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (22, 'BAIA MARCELLO', '10.121.10.15')
+INSERT INTO [dbo].[Pc] ([Id_Pc], [Descrizione], [Ip]) VALUES (22, 'BAIA MARCELLO', '10.121.10.17')
 SET IDENTITY_INSERT [dbo].[Pc] OFF

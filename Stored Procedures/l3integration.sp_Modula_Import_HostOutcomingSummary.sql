@@ -170,7 +170,7 @@ BEGIN
 								THROW 50001, @Errore, 1
 						END
 						ELSE
-							THROW 50006, 'NESSUNA CORRISPONDENZA TROVATA CON UNA RIGA ATTIVA NELLE LISTE DI PRELIEVO (CONTROLLARE SE NON E'' GIA STATO PRCESSATO ED E'' UN RECORD DUPLICATO)',1
+							THROW 50006, 'NESSUNA CORRISPONDENZA TROVATA CON UNA RIGA ATTIVA NELLE LISTE DI PRELIEVO (CONTROLLARE SE NON E'' GIA STATO PROCESSATO ED E'' UN RECORD DUPLICATO)',1
 
 						--Controllo fine Lista
 						EXEC [dbo].[sp_Update_Stati_ListePrelievo]
@@ -253,7 +253,6 @@ BEGIN
 					@Messaggio			= @MSG_LOG,
 					@Errore				= @Errore OUTPUT;
 		END
-
 		-- Fine del codice
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;
 		IF @TranCount = 0 COMMIT TRANSACTION;

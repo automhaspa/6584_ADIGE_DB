@@ -361,8 +361,6 @@ BEGIN
 						SET @Uso_Modula = 1
 					END
 
-					SELECT @Item_Code_C, @Disponibilita_Effettiva_ModulA,@Quantita_Distribuita
-
 					--SE MODULA NON E' SUFFICIENTE PROCEDO E VERIFICO IN AWM QUANTO HO
 					IF @Quantita_Distribuita < @Quantity_C
 					BEGIN
@@ -459,7 +457,7 @@ BEGIN
 									UT.Data_Inserimento			DESC,
 									UD.Quantita_Pezzi			DESC
 
-						OPEN CursoreUdc 
+						OPEN CursoreUdc
 						FETCH NEXT FROM CursoreUdc  INTO
 								@Id_UdcDettaglio,
 								@Id_Udc,
@@ -502,20 +500,30 @@ BEGIN
 									INSERT INTO Missioni_Picking_Dettaglio
 										(Id_Udc, Id_UdcDettaglio, Id_Testata_Lista, Id_Riga_Lista, Id_Articolo, Quantita, Flag_SvuotaComplet, Id_Stato_Missione,Id_Partizione_Destinazione, Kit_Id, DataOra_UltimaModifica)
 									VALUES
-										(@Id_Udc,@Id_UdcDettaglio,@ID, @Id_Riga_C, @Id_Articolo,@Qta_DaPrelevare_Automha,@Flag_Svuota_Compl, (CASE WHEN (@Id_Tipo_Udc = 'I') THEN 2 ELSE 1 END), @Id_Partizione_Dest_Missione, @Kit_Id_C, GETDATE())
+										(@Id_Udc,@Id_UdcDettaglio,@ID, @Id_Riga_C, @Id_Articolo,@Qta_DaPrelevare_Automha,@Flag_Svuota_Compl, (CASE WHEN (@Id_Tipo_Udc in ('I','M')) THEN 2 ELSE 1 END), @Id_Partizione_Dest_Missione, @Kit_Id_C, GETDATE())
 
 								SET @Quantita_Distribuita = @Quantity_C
 							END
 							--Se l'udc non basta per soddisfare la quantità richiesta
 							ELSE
 							BEGIN
-								SET @Flag_Svuota_Compl = 1
+								IF NOT EXISTS(SELECT TOP 1 1 FROM Udc_Dettaglio WHERE Id_Udc = @Id_Udc AND Id_UdcDettaglio <> @Id_Udc_Dettaglio)
+									SET @Flag_Svuota_Compl = 1
+								ELSE
+									SET @Flag_Svuota_Compl = 0
+
 								SET @Quantita_Distribuita += @Disponibilita_Automha
 
-								IF EXISTS (	SELECT	TOP 1 1 FROM Missioni_Picking_Dettaglio
-											WHERE	Id_Testata_Lista = @ID AND Id_Riga_Lista = @Id_Riga_C
-												AND Id_Udc = @Id_Udc AND Id_UdcDettaglio = @Id_UdcDettaglio
-												AND ISNULL(KIT_ID,0) = @Kit_Id_C AND Id_Stato_Missione = 4)
+								IF EXISTS
+								(
+									SELECT	TOP 1 1 FROM Missioni_Picking_Dettaglio
+									WHERE	Id_Testata_Lista = @ID
+										AND Id_Riga_Lista = @Id_Riga_C
+										AND Id_Udc = @Id_Udc
+										AND Id_UdcDettaglio = @Id_UdcDettaglio
+										AND ISNULL(KIT_ID,0) = @Kit_Id_C
+										AND Id_Stato_Missione = 4
+								)
 									UPDATE	Missioni_Picking_Dettaglio
 									SET		Quantita += @Disponibilita_Automha,
 											Id_Stato_Missione = 1,
@@ -530,7 +538,7 @@ BEGIN
 									INSERT INTO Missioni_Picking_Dettaglio
 										(Id_Udc, Id_UdcDettaglio, Id_Testata_Lista, Id_Riga_Lista, Id_Articolo, Quantita, Flag_SvuotaComplet, Id_Stato_Missione, Id_Partizione_Destinazione, Kit_Id, DataOra_UltimaModifica)
 									VALUES
-										(@Id_Udc,@Id_UdcDettaglio,@ID, @Id_Riga_C, @Id_Articolo,@Disponibilita_Automha,@Flag_Svuota_Compl,(CASE WHEN (@Id_Tipo_Udc = 'I') THEN 2 ELSE 1 END),@Id_Partizione_Dest_Missione, @Kit_Id_C, GETDATE())
+										(@Id_Udc,@Id_UdcDettaglio,@ID, @Id_Riga_C, @Id_Articolo,@Disponibilita_Automha,@Flag_Svuota_Compl,(CASE WHEN (@Id_Tipo_Udc in ('I','M')) THEN 2 ELSE 1 END),@Id_Partizione_Dest_Missione, @Kit_Id_C, GETDATE())
 							END
 
 							--Se ho distribuito completamente 
@@ -648,15 +656,15 @@ BEGIN
 				WHERE	ID = @ID
 
 			--CONTROLLO SE CI SONO COINVOLTE UDC INGOMBRANTI PER LANCIARE L'EVENTO DI PRELIEVO CUSTOM SULLA BAIA
-			IF EXISTS(SELECT 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @ID AND Nome_Magazzino IN ('INGOMBRANTI','INGOMBRANTI_M'))
+			IF EXISTS(SELECT 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @ID AND Nome_Magazzino IN ('INGOMBRANTI','ING_ADIGE_1'))
 			BEGIN
 				--Se sono ingombranti le metto in stato 2 come per modula
 				DECLARE @XmlParam			XML
-				SET @XmlParam = CONCAT('<Parametri><Id_Testata_Lista>', @ID ,'</Id_Testata_Lista><Nome_Magazzino>INGOMBRANTI</Nome_Magazzino></Parametri>')
 				SET @Errore += 'LISTA AVVIATA CORRETTAMENTE, ATTENZIONE!! '
 
 				IF EXISTS (SELECT 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @ID AND Nome_Magazzino = 'INGOMBRANTI')
 				BEGIN
+					SET @XmlParam = CONCAT('<Parametri><Id_Testata_Lista>', @ID ,'</Id_Testata_Lista><Nome_Magazzino>INGOMBRANTI</Nome_Magazzino></Parametri>')
 					--LANCIO UN EVENTO SULLA vRighePrelievoAttive per la lista avviata con destinazione ingombranti
 					EXEC @Return = dbo.sp_Insert_Eventi
 						@Id_Tipo_Evento		= 6,
@@ -674,8 +682,10 @@ BEGIN
 					SET @Errore += 'LA LISTA PREVEDE PRELIEVO DI MATERIALI INGOMBRANTI'
 				END
 
-				IF EXISTS (SELECT 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @ID AND Nome_Magazzino = 'INGOMBRANTI_M')
+				IF EXISTS (SELECT 1 FROM AwmConfig.vRighePrelievoAttive WHERE Id_Testata_Lista = @ID AND Nome_Magazzino = 'ING_ADIGE_1')
 				BEGIN
+					SET @XmlParam = CONCAT('<Parametri><Id_Testata_Lista>', @ID ,'</Id_Testata_Lista><Nome_Magazzino>ING_ADIGE_1</Nome_Magazzino></Parametri>')
+					
 					--LANCIO UN EVENTO SULLA vRighePrelievoAttive per la lista avviata con destinazione ingombranti
 					EXEC @Return = dbo.sp_Insert_Eventi
 						@Id_Tipo_Evento		= 6,
@@ -706,29 +716,69 @@ BEGIN
 			SET		Stato = 2
 			WHERE	ID = @ID
 			
-			--AGGIORNO LAPARTIZIONE DI DESTINAZIONE
-			UPDATE	dbo.Missioni_Picking_Dettaglio
-			SET		Id_Partizione_Destinazione = @Id_Partizione,
+			--AGGIORNO LA PARTIZIONE DI DESTINAZIONE
+			UPDATE	MPD
+			SET		Id_Partizione_Destinazione =	CASE
+														--Se è di tipo A lo mando alla baia da cui mi arriva la richiesta
+														WHEN UT.Id_Tipo_Udc IN ('1','2','3','I')	THEN @Id_Partizione
+														WHEN UT.Id_Tipo_Udc = 'M'					THEN 7685
+														--Se  è di tipo B lo mando alla baia 3B03
+														WHEN UT.Id_Tipo_Udc IN ('4','5','6')		THEN 3203
+													END,
 					DataOra_UltimaModifica = GETDATE()
+			FROM	Missioni_Picking_Dettaglio		MPD
+			JOIN	Udc_Testata						UT
+			ON		UT.Id_Udc = MPD.Id_Udc
 			WHERE	Id_Testata_Lista = @ID
 				AND Id_Stato_Missione = 1
-				AND Id_Udc <> @ID_UDC_MODULA
+				AND MPD.Id_Udc <> @ID_UDC_MODULA
 			
-			--SE HO UNA MISSIONE PICKING DETTAGLI IN STATO 2 MA NON C'E' LA MISSIONE ASSOCIATA LA RIMETTO IN STATO 1
+			--SE HO UNA MISSIONE PICKING DETTAGLI IN STATO 5 MA NON C'E' LA MISSIONE ASSOCIATA LA RIMETTO IN STATO 1
+			/*
+				P.A.S - 13/06/2023
+				E' CAPITATO CHE AVESSERO FATTO PARTIRE UNA LISTA DI PRELIEVO IN 3D04, CON UNA UDC CHE E' ANDATA IN 3B03.
+				DOPO CHE L'UDC E' ARRIVATA IN 3B03 L'OPERATORE HA SOSPESO LA LISTA E LA RIGA NELLA MISSIONI_PICKING_DETTAGLIO
+
+				QUANDO L'OPERATORE L'HA FATTA RIPARTIRE, LA RIGA DELLA MPD E' RIMASTA IN STATO 5 PERCHE' NON E' ENTRATA IN QUESTA SELECT PERCHE' L'ULTIMA CONDIZIONE (CHE HO COMMENTATO), DAVA FALSO,
+				IN QUANTO NELLA MPD HO 3B03 COME DESTINAZIONE, E L'UDC ERA GIA' SU 3B03.
+
+				DATO CHE LA RIGA NELLA MPD E' RIMASTA A 5, NELL'EVENTO DELL'OPERATORE IN BAIA 3B03 NON SI VEDEVA NIENTE.
+				----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+				QUINDI HO COMMENTATO L'ULTIMA CONDIZIONE E HO MESSO UN CASE SULL'UPDATE DELL'ID_STATO_MISSIONE:
+					SE L'UDC SI TROVA IN UNA PARTIZIONE DIVERSA DA QUELLA DI DESTINAZIONE METTO A 1 (COSI' FACENDO CREO LA MISSIONE)
+					SENNO' METTO A 2 (RIGA DA PROCESSARE, MA SENZA LA NECESSITA' DI CREARE UNA MISSIONE)
+
+			*/
 			UPDATE	MPD
-			SET		Id_Stato_Missione = 1,
+			SET		Id_Stato_Missione = CASE
+											WHEN UP.Id_Partizione <> MPD.Id_Partizione_Destinazione THEN 1
+											ELSE 2
+										END,
 					DataOra_UltimaModifica = GETDATE()
 			FROM	dbo.Missioni_Picking_Dettaglio	MPD
 			JOIN	dbo.Udc_Posizione				UP
 			ON		up.Id_Udc = mpd.Id_Udc
 			JOIN	dbo.Partizioni					P
 			ON		p.ID_PARTIZIONE = up.Id_Partizione
-				AND p.ID_TIPO_PARTIZIONE = 'MA'
+				AND p.ID_TIPO_PARTIZIONE IN ('MA','SP','TR','RU','PK','KT','US')
 			WHERE	MPD.Id_Testata_Lista = @ID
 				AND MPD.Id_Stato_Missione = 5
 				AND MPD.Id_Udc <> @ID_UDC_MODULA
-				AND UP.Id_Partizione <> MPD.Id_Partizione_Destinazione
+				--AND UP.Id_Partizione <> MPD.Id_Partizione_Destinazione
 		END
+
+		DECLARE @XmlParam_RigheAttive			XML = CONCAT('<Parametri><Id_Testata_Lista>', @ID ,'</Id_Testata_Lista></Parametri>')
+		--LANCIO UN EVENTO SULLA vRighePrelievoAttive per la lista avviata con destinazione ingombranti
+		EXEC @Return = dbo.sp_Insert_Eventi
+			@Id_Tipo_Evento		= 7,
+			@Id_Partizione		= @Id_Partizione,
+			@Id_Tipo_Messaggio	= 1100,
+			@XmlMessage			= @XmlParam_RigheAttive,
+			@Id_Processo		= @Id_Processo,
+			@Origine_Log		= @Origine_Log,
+			@Id_Utente			= @Id_Utente,
+			@Errore				= @Errore					OUTPUT;
 
 		DECLARE @messaggio_log VARCHAR(MAX) = CONCAT('Tempo Impiegato ad avviare la lista ', @ID, ' ', DATEDIFF(MILLISECOND,@start,GETDATE()),' ms')
 		EXEC dbo.sp_Insert_Log

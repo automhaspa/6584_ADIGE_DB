@@ -197,24 +197,45 @@ BEGIN
 					END
 				END
 
-				--UTILIZZATO QUANDO CI SONO PIU' UDC SPOSTAMENTO FACENTI RIFERIMENTO ALLA STESSA RIGA
-				SELECT	@IdMissione = Id_Missione,
-						@Id_Udc_Mov = ISNULL(ud.Id_Udc, 0),
-						@IdUdcDettaglioMov = ISNULL(ud.Id_UdcDettaglio, 0),
-						@Qta_Da_Spostare_Missione_Udc = ISNULL(ud.Quantita_Pezzi, 0),
-						@IdTestata = toe.ID
-				FROM	Missioni		M
-				JOIN	Udc_Dettaglio	ud
-				ON		m.Id_Udc = ud.Id_Udc
-				JOIN	Custom.TestataOrdiniEntrata toe
-				ON		toe.ID = ud.Id_Ddt_Reale
-				WHERE	ud.Id_Articolo = @IdArticoloEntrato
-					AND m.Id_Tipo_Missione = 'MTM'
-					AND toe.LOAD_ORDER_ID = @LoadOrderId
-					AND toe.LOAD_ORDER_TYPE = @LoadOrderType
-					AND ud.Id_Riga_Ddt = @Id_Riga
-				ORDER
-					BY	ud.Quantita_Pezzi ASC
+				IF (@LoadOrderType <> 'NOS')
+					--UTILIZZATO QUANDO CI SONO PIU' UDC SPOSTAMENTO FACENTI RIFERIMENTO ALLA STESSA RIGA
+					SELECT	@IdMissione = Id_Missione,
+							@Id_Udc_Mov = ISNULL(ud.Id_Udc, 0),
+							@IdUdcDettaglioMov = ISNULL(ud.Id_UdcDettaglio, 0),
+							@Qta_Da_Spostare_Missione_Udc = ISNULL(ud.Quantita_Pezzi, 0),
+							@IdTestata = toe.ID
+					FROM	Missioni		M
+					JOIN	Udc_Dettaglio	ud
+					ON		m.Id_Udc = ud.Id_Udc
+					JOIN	Custom.TestataOrdiniEntrata toe
+					ON		toe.ID = ud.Id_Ddt_Reale
+					WHERE	ud.Id_Articolo = @IdArticoloEntrato
+						AND m.Id_Tipo_Missione = 'MTM'
+						AND toe.LOAD_ORDER_ID = @LoadOrderId
+						AND toe.LOAD_ORDER_TYPE = @LoadOrderType
+						AND ud.Id_Riga_Ddt = @Id_Riga
+					ORDER
+						BY	ud.Quantita_Pezzi ASC
+				ELSE
+					SELECT	@IdMissione = Id_Missione,
+							@Id_Udc_Mov = ISNULL(ud.Id_Udc, 0),
+							@IdUdcDettaglioMov = ISNULL(ud.Id_UdcDettaglio, 0),
+							@Qta_Da_Spostare_Missione_Udc = ISNULL(ud.Quantita_Pezzi, 0),
+							@IdTestata = toe.ID
+					FROM	Missioni		M
+					JOIN	Udc_Dettaglio	ud
+					ON		m.Id_Udc = ud.Id_Udc
+					JOIN	Custom.TestataOrdiniEntrata toe
+					ON		TOE.LOAD_ORDER_TYPE = 'NOS'
+						AND TOE.LOAD_ORDER_ID LIKE '%|%'
+						AND	ud.Id_Udc = CAST(SUBSTRING(TOE.LOAD_ORDER_ID,CHARINDEX('|',toe.LOAD_ORDER_ID)+1,LEN(toe.LOAD_ORDER_ID)) AS INT)
+					WHERE	ud.Id_Articolo = @IdArticoloEntrato
+						AND m.Id_Tipo_Missione = 'MTM'
+						AND toe.LOAD_ORDER_ID = @LoadOrderId
+						AND toe.LOAD_ORDER_TYPE = @LoadOrderType
+						AND ISNULL(ud.Id_Riga_Ddt,1) = @Id_Riga
+					ORDER
+						BY	ud.Quantita_Pezzi ASC
 
 				IF (ISNULL(@Qta_Consuntivo, 0) > 0 AND ISNULL(@IdUdcDettaglioMov, 0) = 0 AND ISNULL(@Qta_Da_Spostare_Missione_Udc,0) = 0)
 					THROW 50001, ' CONSUNTIVO NON CORRISPONDENTE A NESSUNA MISSIONE DI SPOSTAMENTO MERCE',1;
@@ -370,23 +391,41 @@ BEGIN
 					--ALLORA LE ELIMINO TUTTE QUELLE CHE FANNO RIFERIMENTO ALLA STESSA RIGA
 					DECLARE @Id_Missione_El		INT
 					DECLARE @Id_Udc_El			INT
+					DECLARE @CursoreEliminazioneMissioni CURSOR
+					
+					IF @LoadOrderType <> 'NOS'
+						SET @CursoreEliminazioneMissioni = CURSOR LOCAL FAST_FORWARD FOR
+							SELECT	Id_Missione,
+									ud.Id_Udc
+							FROM	Missioni					M
+							JOIN	Udc_Dettaglio				UD
+							ON		M.Id_Udc = UD.Id_Udc
+							JOIN	Custom.TestataOrdiniEntrata TOE
+							ON		toe.ID = ud.Id_Ddt_Reale
+							WHERE	ud.Id_Articolo = @IdArticoloEntrato
+								AND m.Id_Tipo_Missione = 'MTM'
+								AND toe.LOAD_ORDER_ID = @LoadOrderId
+								AND toe.LOAD_ORDER_TYPE = @LoadOrderType
+								AND ud.Id_Riga_Ddt = @Id_Riga
+					ELSE
+						SET @CursoreEliminazioneMissioni = CURSOR LOCAL FAST_FORWARD FOR
+							SELECT	Id_Missione,
+									ISNULL(ud.Id_Udc, 0)
+							FROM	Missioni		M
+							JOIN	Udc_Dettaglio	ud
+							ON		m.Id_Udc = ud.Id_Udc
+							JOIN	Custom.TestataOrdiniEntrata toe
+							ON		TOE.LOAD_ORDER_TYPE = 'NOS'
+								AND TOE.LOAD_ORDER_ID LIKE '%|%'
+								AND	ud.Id_Udc = CAST(SUBSTRING(TOE.LOAD_ORDER_ID,CHARINDEX('|',toe.LOAD_ORDER_ID)+1,LEN(toe.LOAD_ORDER_ID)) AS INT)
+							WHERE	ud.Id_Articolo = @IdArticoloEntrato
+								AND m.Id_Tipo_Missione = 'MTM'
+								AND toe.LOAD_ORDER_ID = @LoadOrderId
+								AND toe.LOAD_ORDER_TYPE = @LoadOrderType
+								AND ISNULL(ud.Id_Riga_Ddt,1) = @Id_Riga
 
-					DECLARE CursoreEliminazioneMissioni CURSOR LOCAL FAST_FORWARD FOR
-						SELECT	Id_Missione,
-								ud.Id_Udc
-						FROM	Missioni					M
-						JOIN	Udc_Dettaglio				UD
-						ON		M.Id_Udc = UD.Id_Udc
-						JOIN	Custom.TestataOrdiniEntrata TOE
-						ON		toe.ID = ud.Id_Ddt_Reale
-						WHERE	ud.Id_Articolo = @IdArticoloEntrato
-							AND m.Id_Tipo_Missione = 'MTM'
-							AND toe.LOAD_ORDER_ID = @LoadOrderId
-							AND toe.LOAD_ORDER_TYPE = @LoadOrderType
-							AND ud.Id_Riga_Ddt = @Id_Riga
-
-					OPEN CursoreEliminazioneMissioni
-					FETCH NEXT FROM CursoreEliminazioneMissioni INTO
+					OPEN @CursoreEliminazioneMissioni
+					FETCH NEXT FROM @CursoreEliminazioneMissioni INTO
 						@Id_Missione_El,
 						@Id_Udc_El
 
@@ -426,13 +465,13 @@ BEGIN
 							@Messaggio			= @LIu,
 							@Errore				= @Errore OUTPUT;
 
-						FETCH NEXT FROM CursoreEliminazioneMissioni INTO
+						FETCH NEXT FROM @CursoreEliminazioneMissioni INTO
 							@Id_Missione_El,
 							@Id_Udc_El
 					END
 
-					CLOSE CursoreEliminazioneMissioni
-					DEALLOCATE CursoreEliminazioneMissioni
+					CLOSE @CursoreEliminazioneMissioni
+					DEALLOCATE @CursoreEliminazioneMissioni
 				END
 				
 				DECLARE @LogInfo VARCHAR(max)

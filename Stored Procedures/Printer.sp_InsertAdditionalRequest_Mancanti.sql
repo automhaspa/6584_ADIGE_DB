@@ -70,9 +70,9 @@ BEGIN
 				@QUANTITA_ETICHETTA					= @Quantita_Articolo,
 				@UDM								= PM.UDM,
 				@ORDER_TYPE							= PM.ORDER_TYPE,
-				@BEHMG								= RLP.BEHMG,
-				@PKBHT								= RLP.PKBHT,
-				@ABLAD								= RLP.ABLAD
+				@BEHMG								= ISNULL(PM.BEHMG,RLP.BEHMG),
+				@PKBHT								= ISNULL(PM.PKBHT,RLP.PKBHT),
+				@ABLAD								= ISNULL(PM.ABLAD,RLP.ABLAD)
 		FROM	AwmConfig.vUdcPrelievoMancanti			PM
 		LEFT
 		JOIN	Custom.RigheListePrelievo				RLP

@@ -13,7 +13,10 @@ CREATE TABLE [Custom].[AnagraficaMancanti]
 [RagSoc_Dest] [char] (10) COLLATE Latin1_General_CI_AS NULL,
 [ORDER_ID] [varchar] (40) COLLATE Latin1_General_CI_AS NULL,
 [ORDER_TYPE] [varchar] (4) COLLATE Latin1_General_CI_AS NULL,
-[DT_EVASIONE] [date] NULL
+[DT_EVASIONE] [date] NULL,
+[BEHMG] [numeric] (10, 3) NULL,
+[PKBHT] [varchar] (15) COLLATE Latin1_General_CI_AS NULL,
+[ABLAD] [varchar] (10) COLLATE Latin1_General_CI_AS NULL
 ) ON [PRIMARY]
 GO
 ALTER TABLE [Custom].[AnagraficaMancanti] ADD CONSTRAINT [PK__AnagraficaMancanti] PRIMARY KEY CLUSTERED ([Id_Testata], [Id_Riga]) ON [PRIMARY]

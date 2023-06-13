@@ -7,6 +7,7 @@ GO
 
 
 
+
 CREATE VIEW [AwmConfig].[vArticoli]
 AS
 WITH Qta_Da_Considerare AS
@@ -30,7 +31,12 @@ Qta_CQ AS
 			COUNT(DISTINCT UD.Id_UdcDettaglio)	Presenza_UDC
 	FROM	Custom.ControlloQualita		CQ
 	JOIN	dbo.Udc_Dettaglio			UD
-	ON		UD.Id_UdcDettaglio = CQ.Id_UdcDettaglio
+	ON		UD.Id_UdcDettaglio = CQ.Id_UdcDettaglio	
+	JOIN	Udc_Posizione	UP
+	ON		UP.Id_Udc = UD.Id_Udc
+	JOIN	Partizioni		P
+	ON		P.Id_PArtizione = UP.Id_Partizione
+	WHERE	ISNULL(p.Id_Tipo_Partizione, '') <> 'AP'
 	GROUP
 		BY	UD.Id_Articolo
 ),
@@ -42,6 +48,11 @@ Qta_NonConforme AS
 	FROM	Custom.NonConformita		NC
 	JOIN	dbo.Udc_Dettaglio			UD
 	ON		UD.Id_UdcDettaglio = NC.Id_UdcDettaglio
+	JOIN	Udc_Posizione	UP
+	ON		UP.Id_Udc = UD.Id_Udc
+	JOIN	Partizioni		P
+	ON		P.Id_PArtizione = UP.Id_Partizione
+	WHERE	ISNULL(p.Id_Tipo_Partizione, '') <> 'AP'
 	GROUP
 		BY	UD.Id_Articolo
 ),
@@ -49,7 +60,7 @@ Qta_MANCANTI AS
 (
 	SELECT	Id_Articolo,
 			SUM(Qta_Mancante)					QtaTot,
-			COUNT(DISTINCT Id_Articolo)	Presenza_UDC
+			COUNT(DISTINCT Id_Articolo)			Presenza_UDC
 	FROM	Custom.AnagraficaMancanti
 	WHERE	Qta_Mancante > 0
 	GROUP
@@ -64,6 +75,11 @@ Qta_In_Transito AS
 	JOIN	Missioni			M
 	ON		M.Id_Udc = UD.Id_Udc
 		AND M.Id_Tipo_Missione = 'MTM'
+	JOIN	Udc_Posizione	UP
+	ON		UP.Id_Udc = UD.Id_Udc
+	JOIN	Partizioni		P
+	ON		P.Id_PArtizione = UP.Id_Partizione
+	WHERE	ISNULL(p.Id_Tipo_Partizione, '') <> 'AP'
 	GROUP
 		BY	Id_Articolo
 )

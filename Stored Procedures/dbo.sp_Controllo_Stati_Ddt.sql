@@ -51,6 +51,7 @@ BEGIN
 			SELECT	DISTINCT ID
 			FROM	Custom.TestataOrdiniEntrata  WITH (NOLOCK)
 			WHERE	Stato = 1
+				AND LOAD_ORDER_ID NOT LIKE 'AWM%'
 		
 		OPEN DdtRealiAperti	
 		FETCH NEXT FROM DdtRealiAperti INTO

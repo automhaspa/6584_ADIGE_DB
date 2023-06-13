@@ -3,6 +3,7 @@ GO
 SET ANSI_NULLS ON
 GO
 
+
 CREATE VIEW [AwmConfig].[vBolleFittizieCompleta] AS
 --CTE CON QUELLO CHE C'è NELLE SOTTOQUERY GROUP BY ID DDT
 SELECT	ID,
@@ -29,4 +30,5 @@ SELECT	ID,
 																UDC_TIPO_B_DA_ANAGRAFARE
 FROM	Custom.AnagraficaDdtFittizi
 WHERE	Id_Stato = 1
+	AND CODICE_DDT NOT LIKE 'AWM%'
 GO

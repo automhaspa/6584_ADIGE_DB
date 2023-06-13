@@ -40,7 +40,7 @@ BEGIN
 			SELECT	@Id_Testata_Lista = Id_Testata
 			FROM	Custom.RigheListePrelievo
 			WHERE	ID = @Id_Riga_Lista
-		
+
 		UPDATE	Missioni_Picking_Dettaglio
 		SET		Id_Stato_Missione = 4,
 				DataOra_Evasione = GETDATE()
@@ -64,19 +64,6 @@ BEGIN
 			THROW 50100, @Errore, 1
 
 		--Controllo le righe rimaste per la chiusura evento
-		--IF @Id_Evento IS NOT NULL
-		--BEGIN
-		--	IF NOT EXISTS	(
-		--						SELECT	TOP 1 1
-		--						FROM	AwmConfig.vRighePrelievoAttive
-		--						WHERE	Id_Testata_Lista = @Id_Testata_Lista
-		--							AND Nome_Magazzino = 'INGOMBRANTI'
-		--					)
-		--		DELETE	Eventi
-		--		WHERE	Id_Evento = @Id_Evento
-		--END
-
-
 		IF NOT EXISTS	(
 							SELECT	TOP 1 1
 							FROM	AwmConfig.vRighePrelievoAttive
@@ -88,8 +75,30 @@ BEGIN
 				SELECT	@Id_Evento = Id_Evento
 				FROM	EVENTI
 				WHERE	Xml_Param.value('data(//Id_Testata_Lista)[1]','int') = @Id_Testata_Lista
+					AND Xml_Param.value('data(//Nome_Magazzino)[1]','varchar(max)') = 'INGOMBRANTI'
 					AND Id_Tipo_Evento = 6
+			
+			IF @Id_Evento IS NOT NULL
+				DELETE	Eventi
+				WHERE	Id_Evento = @Id_Evento
+			
+			SET @Id_Evento = NULL
+		END
 
+		IF NOT EXISTS	(
+							SELECT	TOP 1 1
+							FROM	AwmConfig.vRighePrelievoAttive
+							WHERE	Id_Testata_Lista = @Id_Testata_Lista
+								AND Nome_Magazzino = 'ING_ADIGE_1'
+						)
+		BEGIN
+			IF @Id_Evento IS NULL
+				SELECT	@Id_Evento = Id_Evento
+				FROM	EVENTI
+				WHERE	Xml_Param.value('data(//Id_Testata_Lista)[1]','int') = @Id_Testata_Lista
+					AND Xml_Param.value('data(//Nome_Magazzino)[1]','varchar(max)') = 'ING_ADIGE_1'
+					AND Id_Tipo_Evento = 6
+			
 			IF @Id_Evento IS NOT NULL
 				DELETE	Eventi
 				WHERE	Id_Evento = @Id_Evento

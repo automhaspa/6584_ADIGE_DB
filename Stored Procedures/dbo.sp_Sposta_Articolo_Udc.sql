@@ -2,7 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
-CREATE PROCEDURE [dbo].[sp_Sposta_Articolo_Udc]
+CREATE PROC [dbo].[sp_Sposta_Articolo_Udc]
 	--ID UDC DETTAGLIO  SORGENTE
 	@Id_UdcDettaglio		INT,
 	--ID UDC DESTINAZIONE
@@ -10,7 +10,8 @@ CREATE PROCEDURE [dbo].[sp_Sposta_Articolo_Udc]
 	--Quantita Da Spostare
 	@Quantita				NUMERIC(10,2),
 	@FlagControlloQualita	BIT,
-	@FlagNonConformita		BIT,
+	@FlagNonConformita		BIT			= 0,
+	@CONTROL_LOT			VARCHAR(50) = NULL,
 	@Quantita_Pezzi			NUMERIC(10,2),
 	-- Parametri Standard;
 	@Id_Processo			VARCHAR(30),
@@ -47,7 +48,9 @@ BEGIN
 		DECLARE @MOTIVO_QUALITA			VARCHAR(MAX)
 		DECLARE @DOPPIO_STEP_QM			INT
 		DECLARE @QTA_QUALITA			NUMERIC(18,4)
-		DECLARE @CONTROL_LOT			VARCHAR(45)
+
+		DECLARE @MOTIVO_NC				VARCHAR(MAX)
+		DECLARE @QTA_NC					NUMERIC(18,4)
 		
 		SELECT	@Id_Articolo		= Id_Articolo,
 				@Id_Udc_Sorgente	= Id_Udc,
@@ -61,8 +64,8 @@ BEGIN
 		--IF (@FlagControlloQualita = 1)
 		--	THROW 50001, ' IMPOSSIBILE MOVIMENTARE QUANTITA SOGGETTA A CONTROLLO QUALITA',1;
 
-		IF (@FlagNonConformita = 1)
-			THROW 50001, ' IMPOSSIBILE MOVIMENTARE QUANTITA NON CONFORME',1;
+		--IF (@FlagNonConformita = 1)
+		--	THROW 50001, ' IMPOSSIBILE MOVIMENTARE QUANTITA NON CONFORME',1;
 
 		IF (@Quantita <= 0)
 			THROW 50001, ' QUANTITA NON VALIDA',1;
@@ -70,19 +73,30 @@ BEGIN
 		IF (@Quantita > @Quantita_Pezzi)
 			THROW 50001, ' IMPOSSIBILE MOVIMENTARE UNA QUANTITA MAGGIORE RISPETTO A QUELLA CONFORME',1;
 
-		IF @FlagControlloQualita = 1 OR EXISTS (SELECT TOP 1 1 FROM Custom.ControlloQualita WHERE Id_UdcDettaglio = @Id_UdcDettaglio)
+		IF @FlagControlloQualita = 1 --OR EXISTS (SELECT TOP 1 1 FROM Custom.ControlloQualita WHERE Id_UdcDettaglio = @Id_UdcDettaglio AND ISNULL(@CONTROL_LOT,'') = ISNULL(CONTROL_LOT,''))
 		BEGIN
 			SET @FlagControlloQualita = 1
 
 			SELECT	@MOTIVO_QUALITA		= MotivoQualita,
 					@DOPPIO_STEP_QM		= Doppio_Step_QM,
-					@QTA_QUALITA		= Quantita,
-					@CONTROL_LOT		= CONTROL_LOT
+					@QTA_QUALITA		= Quantita
 			FROM	Custom.ControlloQualita
 			WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+				AND ISNULL(@CONTROL_LOT,'') = ISNULL(CONTROL_LOT,'')
 		END
 
-		--IF EXISTS (SELECT TOP 1 1 FROM Missioni_Picking_Dettaglio WHERE Id_UdcDettaglio = @Id_UdcDettaglio AND Id_Stato_Missione <> 4)
+		IF @FlagNonConformita = 1 
+			OR EXISTS (SELECT TOP 1 1 FROM Custom.NonConformita WHERE Id_UdcDettaglio = @Id_UdcDettaglio AND ISNULL(@CONTROL_LOT,'') = ISNULL(CONTROL_LOT,'') AND Quantita = @Quantita_Pezzi)
+		BEGIN
+			SET @FlagNonConformita = 1
+
+			SELECT	@MOTIVO_NC		= MotivoNonConformita,
+					@QTA_NC			= Quantita
+			FROM	Custom.NonConformita
+			WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+				AND ISNULL(@CONTROL_LOT,'') = ISNULL(CONTROL_LOT,'')
+		END
+		
 		IF	(
 				SELECT	@Quantita_Pezzi - SUM(Quantita)
 				FROM	Missioni_Picking_Dettaglio	MPD
@@ -125,6 +139,10 @@ BEGIN
 					@FlagControlloQualita	= @FlagControlloQualita,
 					@DOPPIO_STEP_QM			= @DOPPIO_STEP_QM,
 					@Motivo_CQ				= @MOTIVO_QUALITA,
+										
+					@FlagNonConforme		= @FlagNonConformita,
+					@Motivo_NC				= @MOTIVO_NC,
+					
 					@CONTROL_LOT			= @CONTROL_LOT,
 					@WBS_CODE				= @WBS_CODE, --SE STO PASSANDO MATERIALE A PROGETTO DEVO ANDARE A PROGETTO
 					@Id_Processo			= @Id_Processo,
@@ -147,19 +165,36 @@ BEGIN
 		BEGIN
 			SET @Errore = 'Attenzione parte della quantità del dettaglio spostato è sottoposta a CONTROLLO QUALITA'''
 
-			IF @Quantita <> @QTA_QUALITA
+			IF EXISTS (SELECT TOP 1 1 FROM Custom.ControlloQualita WHERE CONTROL_LOT = @CONTROL_LOT AND Id_UdcDettaglio = @Id_UdcDettaglio)
 			BEGIN
-				IF EXISTS (SELECT TOP 1 1 FROM Custom.ControlloQualita WHERE CONTROL_LOT = @CONTROL_LOT AND Id_UdcDettaglio = @Nuovo_IdUdcDettaglio)
+				IF @Quantita <> @QTA_QUALITA
 					UPDATE	Custom.ControlloQualita
-					SET		Quantita = @QTA_QUALITA
-					WHERE	Id_UdcDettaglio = @Nuovo_IdUdcDettaglio
+					SET		Quantita = Quantita - @Quantita
+					WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
 						AND CONTROL_LOT = @CONTROL_LOT
-				ELSE
-					INSERT INTO Custom.ControlloQualita
-						(Id_UdcDettaglio,MotivoQualita,Quantita, Doppio_Step_QM, CONTROL_LOT)
-					VALUES
-						(@Nuovo_IdUdcDettaglio,@MOTIVO_QUALITA,@QTA_QUALITA,@DOPPIO_STEP_QM,@CONTROL_LOT)
+
+				ELSE IF @Quantita = @QTA_QUALITA
+					DELETE	Custom.ControlloQualita
+					WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+						AND CONTROL_LOT = @CONTROL_LOT					
 			END
+		END
+
+		IF @FlagNonConformita = 1
+		BEGIN
+			SET @Errore = 'Attenzione parte della quantità del dettaglio spostato è sottoposta a NON CONFORMITA'''
+
+			IF @Quantita <> @QTA_NC AND EXISTS (SELECT TOP 1 1 FROM Custom.NonConformita WHERE CONTROL_LOT = @CONTROL_LOT AND Id_UdcDettaglio = @Id_UdcDettaglio
+				and Quantita = @Quantita_Pezzi)
+				UPDATE	Custom.NonConformita
+				SET		Quantita = Quantita - @Quantita
+				WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+					AND CONTROL_LOT = @CONTROL_LOT
+			else if @Quantita = @QTA_NC
+				DELETE	Custom.NonConformita
+				WHERE	Id_UdcDettaglio = @Id_UdcDettaglio
+					AND CONTROL_LOT = @CONTROL_LOT
+					AND Quantita = @Quantita_Pezzi
 		END
 
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;

@@ -5,6 +5,7 @@ GO
 
 
 
+
 CREATE VIEW [AwmConfig].[vAnagraficheDdt]
 AS
 	SELECT	addt.ID,
@@ -23,6 +24,7 @@ AS
 	JOIN	Custom.TestataOrdiniEntrata		toe
 	ON		addt.ID = toe.Id_Ddt_Fittizio
 	WHERE	ADDT.Codice_DDT NOT LIKE 'WBS%'
+		AND	ADDT.Codice_DDT NOT LIKE 'AWM%'
 		AND ADDT.Id_Stato IN (1,2,5)
 	GROUP
 		BY	addt.ID,

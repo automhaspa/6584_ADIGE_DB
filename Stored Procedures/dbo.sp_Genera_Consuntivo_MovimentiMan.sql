@@ -47,7 +47,7 @@ BEGIN
 	IF @TranCount = 0 BEGIN TRANSACTION
 
 	BEGIN TRY
-		IF @IdCausaleL3 NOT IN ('SMO','CMO')
+		IF @IdCausaleL3 NOT IN ('SMO','CMO','NOS')
 		BEGIN
 			DECLARE @ST_QUALITY VARCHAR(4) = CASE
 												WHEN @IdCausaleL3 = 'UBL'		THEN 'QUAL'--'OK'

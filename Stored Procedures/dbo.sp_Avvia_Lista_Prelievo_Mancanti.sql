@@ -105,23 +105,6 @@ BEGIN
 		DECLARE @Id_Tipo_Udc					VARCHAR(1)
 		DECLARE @Id_Partizione_Dest_Missione	INT
 
-		--IF NOT EXISTS (SELECT TOP 1 1 FROM Custom.TestataListePrelievo WHERE ID = @Id_Testata)
-		--BEGIN
-		--	SET IDENTITY_INSERT Custom.TestataListePrelievo ON
-
-		--	INSERT INTO Custom.TestataListePrelievo
-		--		(ID, ORDER_ID,ORDER_TYPE,DT_EVASIONE,COMM_PROD,COMM_SALE,DES_PREL_CONF,FL_KIT,
-		--			PRIORITY,PROD_LINE,Stato,DataOraCreazioneRecord,Id_Partizione_Uscita
-		--		)
-		--	SELECT	Id_Testata,ORDER_ID,ORDER_TYPE,DT_EVASIONE,COMM_PROD,COMM_SALE,RagSoc_Dest,0,5,PROD_LINE,3,GETDATE(),@Id_Partizione_Dest_Missione
-		--	FROM	Custom.AnagraficaMancanti
-		--	WHERE	Id_Testata = @Id_Testata
-		--		AND Id_Articolo = @Id_Articolo
-
-		--	SET IDENTITY_INSERT Custom.TestataListePrelievo OFF
-		--END
-
-
 		IF @Magazzino = 1
 			EXEC [dbo].[sp_Prelievo_Lista_NC]
 				@Id_Articolo			= @Id_Articolo,
@@ -410,7 +393,11 @@ BEGIN
 					--Se l'udc non basta per soddisfare la quantità richiesta
 					ELSE
 					BEGIN
-						SET @Flag_Svuota_Compl = 1
+						IF NOT EXISTS(SELECT TOP 1 1 FROM Udc_Dettaglio WHERE Id_Udc = @Id_Udc AND Id_UdcDettaglio <> @Id_UdcDettaglio)
+							SET @Flag_Svuota_Compl = 1
+						ELSE
+							SET @Flag_Svuota_Compl = 0
+
 						SET @Qta_Distribuita += @Qta_Dettaglio
 
 						IF EXISTS	(

@@ -36,29 +36,29 @@ BEGIN
 
 	BEGIN TRY	
 		-- Dichiarazioni Variabili;
-		DECLARE @IdArticoloAutomha		INT
-		DECLARE @IdUdcDettaglio			INT
+		DECLARE @Id_Articolo_AWM		INT
+		DECLARE @Id_UdcDettaglio		INT
 		DECLARE @Qta_Gia_Prelevata		NUMERIC(10,2)
 		DECLARE @Qta_Da_Prelevare_Calc	NUMERIC(10,2)
 		
-		SELECT	@IdArticoloAutomha = a.Id_Articolo,
-				@IdUdcDettaglio = mpd.Id_UdcDettaglio,
-				@Qta_Gia_Prelevata = Qta_Prelevata
-		FROM	Missioni_Picking_Dettaglio	mpd
-		JOIN	Articoli					a
-		ON		mpd.Id_Articolo = a.Id_Articolo
+		SELECT	@Id_Articolo_AWM	= A.Id_Articolo,
+				@Id_UdcDettaglio	= MPD.Id_UdcDettaglio,
+				@Qta_Gia_Prelevata	= Qta_Prelevata
+		FROM	Missioni_Picking_Dettaglio	MPD
+		JOIN	Articoli					A
+		ON		MPD.Id_Articolo = A.Id_Articolo
 		WHERE	Id_Udc = @Id_Udc
 			AND Id_Testata_Lista = @Id_Testata_Lista
 			AND Id_Riga_Lista = @Id_Riga_Lista
 			AND Id_Stato_Missione = 2
 
-		IF (@Qta_Gia_Prelevata > 0)
-			THROW 50001, ' PICKING COMPLETO UTILIZZABILE SOLO SE LA QUANTITA'' PRELEVATA DELL ARTICOLO E'' UGUALE A 0', 1
+		IF @Qta_Gia_Prelevata > 0
+			THROW 50001, 'PICKING COMPLETO UTILIZZABILE SOLO SE LA QUANTITA'' PRELEVATA DELL ARTICOLO E'' UGUALE A 0', 1
 
 		--AGGIUNGO IL RECORD PER LA STAMPA AUTOMATICA PRIMA DI PERDERE UN QUALSIASI DATO
 		EXEC [Printer].[sp_InsertAdditionalRequest_Picking]
 				@Id_Evento			= @Id_Evento,
-				@Id_Articolo		= @IdArticoloAutomha,
+				@Id_Articolo		= @Id_Articolo_AWM,
 				@Quantita_Articolo	= @QuantitaDaPrelevare,
 				@Id_Riga_Lista		= @Id_Riga_Lista,
 				@Id_Testata_Lista	= @Id_Testata_Lista,
@@ -70,8 +70,8 @@ BEGIN
 		--Causale 1 picking da lista con aggiornamento dello
 		EXEC dbo.sp_Update_Aggiorna_Contenuto_Udc	
 							@Id_Udc					= @Id_Udc,
-							@Id_UdcDettaglio		= @IdUdcDettaglio, 
-							@Id_Articolo			= @IdArticoloAutomha,
+							@Id_UdcDettaglio		= @Id_UdcDettaglio, 
+							@Id_Articolo			= @Id_Articolo_AWM,
 							@Qta_Pezzi_Input		= @QuantitaDaPrelevare,
 							@Id_Causale_Movimento	= 1,
 							@Id_Riga_Lista			= @Id_Riga_Lista,
@@ -85,7 +85,7 @@ BEGIN
 		EXEC [dbo].[sp_Gest_Packing_List]
 				@Id_Testata_Lista_Prelievo	= @Id_Testata_Lista,
 				@Quantita					= @QuantitaDaPrelevare,
-				@Id_Articolo				= @IdArticoloAutomha,
+				@Id_Articolo				= @Id_Articolo_AWM,
 				@Id_Evento_Picking			= @Id_Evento,
 				@Id_Processo				= @Id_Processo,
 				@Origine_Log				= @Origine_Log,
@@ -96,25 +96,32 @@ BEGIN
 			RAISERROR(@Errore, 12, 1)
 
 		--CONTROLLO SE E' FINITA LA LISTA PER QUELL'UDC
-		DECLARE @ArticoliUdcDaPrelevare		INT
-		DECLARE @ArticoliUdcPrelevati		INT
+		DECLARE @ArticoliUdc_DaPrelevare	INT
+		DECLARE @ArticoliUdc_Prelevati		INT
 		
-		SELECT @ArticoliUdcDaPrelevare = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE Id_Udc = @Id_Udc AND Id_Testata_Lista = @Id_Testata_Lista
-		SELECT @ArticoliUdcPrelevati = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE  Id_Udc = @Id_Udc AND Id_Testata_Lista = @Id_Testata_Lista AND Id_Stato_Missione IN (4)
+		SELECT	@ArticoliUdc_DaPrelevare = COUNT(1)
+		FROM	Missioni_Picking_Dettaglio
+		WHERE	Id_Udc = @Id_Udc
+			AND Id_Testata_Lista = @Id_Testata_Lista
+
+		SELECT	@ArticoliUdc_Prelevati = COUNT(1)
+		FROM	Missioni_Picking_Dettaglio
+		WHERE	Id_Udc = @Id_Udc
+			AND Id_Testata_Lista = @Id_Testata_Lista
+			AND Id_Stato_Missione = 4
 
 		--Se ho completato la lista per l'udc la stocco in automatico
-		IF (@ArticoliUdcDaPrelevare = @ArticoliUdcPrelevati)
+		IF @ArticoliUdc_DaPrelevare = @ArticoliUdc_Prelevati
 		BEGIN
 			DECLARE @Id_Partizione INT
+
 			SELECT	@Id_Partizione = Id_Partizione
 			FROM	Udc_Posizione
 			WHERE	Id_Udc = @Id_Udc
 
 			--Se mi trovo nelle baie di picking
-			IF (@Id_Partizione NOT IN (3203))
-			BEGIN
-				DECLARE	@return_value INT
-				EXEC @return_value = [dbo].[sp_Stocca_Udc]
+			IF @Id_Partizione <> 3203
+				EXEC [dbo].[sp_Stocca_Udc]
 						@Id_Udc				= @Id_Udc,
 						@Id_Testata_Lista	= @Id_Testata_Lista,
 						@Id_Evento			= @Id_Evento,
@@ -122,10 +129,8 @@ BEGIN
 						@Origine_Log		= @Origine_Log,
 						@Id_Utente			= @Id_Utente,
 						@Errore				= @Errore OUTPUT
-			END
-			--Se mi trovo in 3B03 elimino l'evento di Picking Lista
 			ELSE
-				DELETE	Eventi
+				DELETE	Eventi					--Se mi trovo in 3B03 elimino l'evento di Picking Lista
 				WHERE	Id_Evento = @Id_Evento
 		END
 
@@ -133,32 +138,51 @@ BEGIN
 		DECLARE	@RigheTot		INT
 		DECLARE @RigheComplete	INT
 
-		SELECT @RigheTot = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE Id_Udc <> 702 AND Id_Testata_Lista = @Id_Testata_Lista
-		SELECT @RigheComplete = COUNT(1) FROM Missioni_Picking_Dettaglio WHERE  Id_Udc <> 702 AND Id_Testata_Lista = @Id_Testata_Lista AND Id_Stato_Missione = 4
-		
-		IF NOT EXISTS	(
-							SELECT	TOP 1 1
-							FROM	Missioni_Picking_Dettaglio
-							WHERE	Id_Testata_Lista = @Id_Testata_Lista
-								AND Id_Riga_Lista = @Id_Riga_Lista
-								AND Id_Stato_Missione <> 4
-						)
+		SELECT	@RigheTot		= COUNT(1)
+		FROM	Missioni_Picking_Dettaglio
+		WHERE	Id_Udc <> 702
+			AND Id_Testata_Lista = @Id_Testata_Lista
+
+		SELECT	@RigheComplete	= COUNT(1)
+		FROM	Missioni_Picking_Dettaglio
+		WHERE	Id_Udc <> 702
+			AND Id_Testata_Lista = @Id_Testata_Lista
+			AND Id_Stato_Missione = 4
+
+		IF	NOT EXISTS
+			(
+				SELECT	TOP 1 1
+				FROM	Missioni_Picking_Dettaglio
+				WHERE	Id_Testata_Lista = @Id_Testata_Lista
+					AND Id_Riga_Lista = @Id_Riga_Lista
+					AND Id_Stato_Missione <> 4
+			)
 			UPDATE	Custom.RigheListePrelievo
 			SET		Stato = 4
 			WHERE	Id_Testata = @Id_Testata_Lista
 				AND ID = @Id_Riga_Lista
 
-		IF (@RigheTot = @RigheComplete)
+		IF @RigheTot = @RigheComplete
 		BEGIN
-			DECLARE @testatalista VARCHAR(30)
-			DECLARE @CAUSALELISTA VARCHAR(3)
+			DECLARE @Codice_Testata	VARCHAR(30)
+			DECLARE @Causale_L3		VARCHAR(3)
 
-			SELECT	@testatalista = ORDER_ID,
-					@CAUSALELISTA = ORDER_TYPE
+			SELECT	@Codice_Testata = ORDER_ID,
+					@Causale_L3 = ORDER_TYPE
 			FROM	Custom.TestataListePrelievo
 			WHERE	ID = @Id_Testata_Lista
 
-			SET @Errore = CONCAT ('Picking eseguito, LISTA CONCLUSA LATO AUTOMHA, ORDER ID : ' ,  @testatalista, '  CAUSALE: ', @CAUSALELISTA)
+			DECLARE @Id_Evento_RigheAttive INT
+			SELECT	@Id_Evento_RigheAttive = Id_Evento
+			FROM	EVENTI
+			WHERE	Id_Tipo_Evento = 7
+				AND Xml_Param.value('data(//Parametri//Id_Testata_Lista)[1]','int') = @Id_Testata_Lista
+
+			IF @Id_Evento_RigheAttive IS NOT NULL
+				DELETE	EVENTI
+				WHERE	Id_Evento = @Id_Evento_RigheAttive
+			
+			SET @Errore = CONCAT ('Picking eseguito, LISTA CONCLUSA LATO AUTOMHA, ORDER ID: ', @Codice_Testata, ' CAUSALE: ', @Causale_L3)
 		END
 
 		-- Eseguo il commit solo se sono la procedura iniziale che ha iniziato la transazione;

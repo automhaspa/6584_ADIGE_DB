@@ -36,7 +36,7 @@ CREATE PROC [Printer].[sp_AddPrinterRequest]
 	@ODA							VARCHAR(200)	= NULL,
 	@SUPPLIER_CODE					VARCHAR(50)		= NULL,
 
-	@N_STAMPE						INT				= NULL,
+	@N_STAMPE						INT				= 1,
 	@Id_Stampante					INT				= NULL,
 	-- Parametri Standard;
 	@Id_Processo	VARCHAR(30),
@@ -66,38 +66,16 @@ BEGIN
 
 	BEGIN TRY
 		DECLARE @Id_Stampante_Finale	INT = @Id_Stampante
+
 		DECLARE @AREA_TERRA				BIT
 
-		IF EXISTS (SELECT TOP 1 1 FROM Partizioni P JOIN Eventi E ON E.Id_Partizione = P.ID_PARTIZIONE WHERE P.ID_TIPO_PARTIZIONE = 'AT' AND Id_Evento = @Id_Evento)
+		IF EXISTS (SELECT TOP 1 1 FROM Partizioni P JOIN Eventi E ON E.Id_Partizione = P.ID_PARTIZIONE WHERE P.ID_TIPO_PARTIZIONE = 'AT' AND P.ID_PARTIZIONE <> 7685
+						AND Id_Evento = @Id_Evento)
 			SET @AREA_TERRA = 1
-
-		IF @Id_Evento IS NULL OR ISNULL(@AREA_TERRA,0) = 1
-		BEGIN
-			IF @TemplateName IN ('pickingTestata','kittingTestata')
-				SELECT	@Id_Stampante_Finale = PA.Id_Printer
-				FROM	Custom.TestataListePrelievo	TPL
-				JOIN	Printer.Printer_Association	PA
-				ON		PA.Id_Partizione = TPL.Id_Partizione_Uscita
-				WHERE	ORDER_ID = @ORDER_ID
-
-			IF @TemplateName IN ('barcodeUdc','etichettaDdtAdige','barcodeUdc_1') OR ISNULL(@AREA_TERRA,0)=1
-				SELECT	@Id_Stampante_Finale = Id_Printer
-				FROM	PRINTER.Printer_Association
-				WHERE	Id_Partizione = 3101
-		END
 		
-		IF @Id_Stampante_Finale IS NULL
+		IF @Id_Stampante IS NULL
 		BEGIN
-			IF @Id_Partizione IS NULL
-				SELECT	@Id_Partizione = Id_Partizione
-				FROM	EVENTI
-				WHERE	ID_EVENTO = @Id_Evento
-
-			SELECT	@Id_Stampante_Finale = Id_Printer
-			FROM	Printer.Printer_Association
-			WHERE	Id_Partizione = @Id_Partizione
-
-			IF @Id_Stampante_Finale IS NULL
+			IF @Id_Evento IS NULL OR ISNULL(@AREA_TERRA,0) = 1
 			BEGIN
 				IF @TemplateName IN ('pickingTestata','kittingTestata')
 					SELECT	@Id_Stampante_Finale = PA.Id_Printer
@@ -106,36 +84,63 @@ BEGIN
 					ON		PA.Id_Partizione = TPL.Id_Partizione_Uscita
 					WHERE	ORDER_ID = @ORDER_ID
 
-				IF @TemplateName IN ('barcodeUdc','etichettaDdtAdige','barcodeUdc_1','barcodeArticolo') OR ISNULL(@AREA_TERRA,0)=1
+				IF @TemplateName IN ('barcodeUdc','etichettaDdtAdige','barcodeUdc_1') OR ISNULL(@AREA_TERRA,0)=1
 					SELECT	@Id_Stampante_Finale = Id_Printer
 					FROM	PRINTER.Printer_Association
 					WHERE	Id_Partizione = 3101
-				
+			END
+		
+			IF @Id_Stampante_Finale IS NULL
+			BEGIN
+				IF @Id_Partizione IS NULL
+					SELECT	@Id_Partizione = Id_Partizione
+					FROM	EVENTI
+					WHERE	ID_EVENTO = @Id_Evento
+
+				SELECT	@Id_Stampante_Finale = Id_Printer
+				FROM	Printer.Printer_Association
+				WHERE	Id_Partizione = @Id_Partizione
+
 				IF @Id_Stampante_Finale IS NULL
 				BEGIN
-					SET @Id_Stampante_Finale = 7
+					IF @TemplateName IN ('pickingTestata','kittingTestata')
+						SELECT	@Id_Stampante_Finale = PA.Id_Printer
+						FROM	Custom.TestataListePrelievo	TPL
+						JOIN	Printer.Printer_Association	PA
+						ON		PA.Id_Partizione = TPL.Id_Partizione_Uscita
+						WHERE	ORDER_ID = @ORDER_ID
+
+					IF @TemplateName IN ('barcodeUdc','etichettaDdtAdige','barcodeUdc_1','barcodeArticolo') OR ISNULL(@AREA_TERRA,0)=1
+						SELECT	@Id_Stampante_Finale = Id_Printer
+						FROM	PRINTER.Printer_Association
+						WHERE	Id_Partizione = 3101
 				
-					DECLARE @MSG_LOG VARCHAR(MAX) = CONCAT('BAIA NON TROVATA PER L''EVENTO ', @ID_EVENTO)
+					IF @Id_Stampante_Finale IS NULL
+					BEGIN
+						SET @Id_Stampante_Finale = 7
+				
+						DECLARE @MSG_LOG VARCHAR(MAX) = CONCAT('BAIA NON TROVATA PER L''EVENTO ', @ID_EVENTO)
 
-					IF EXISTS (SELECT TOP 1 1 FROM Eventi WHERE Id_Evento = @Id_Evento AND Id_Partizione IS NOT NULL)
-						SET @MSG_LOG = CONCAT(@MSG_LOG, ' L''EVENTO PERO'' HA UNA BAIA COLLEGATA')
+						IF EXISTS (SELECT TOP 1 1 FROM Eventi WHERE Id_Evento = @Id_Evento AND Id_Partizione IS NOT NULL)
+							SET @MSG_LOG = CONCAT(@MSG_LOG, ' L''EVENTO PERO'' HA UNA BAIA COLLEGATA')
 
-					EXEC sp_Insert_Log
-								@Id_Processo		= @Id_Processo,
-								@Origine_Log		= @Origine_Log,
-								@Proprieta_Log		= @Nome_StoredProcedure,
-								@Id_Utente			= @Id_Utente,
-								@Id_Tipo_Log		= 4,
-								@Id_Tipo_Allerta	= 0,
-								@Messaggio			= @MSG_LOG,
-								@Errore				= @Errore OUTPUT;
+						EXEC sp_Insert_Log
+									@Id_Processo		= @Id_Processo,
+									@Origine_Log		= @Origine_Log,
+									@Proprieta_Log		= @Nome_StoredProcedure,
+									@Id_Utente			= @Id_Utente,
+									@Id_Tipo_Log		= 4,
+									@Id_Tipo_Allerta	= 0,
+									@Messaggio			= @MSG_LOG,
+									@Errore				= @Errore OUTPUT;
+					END
 				END
 			END
 		END
 
 		IF @Id_Stampante_Finale IS NULL
 			THROW 50009, 'Nessuna stampante associata alla baia dell''evento. ', 1
-
+		
 		IF @TemplateName = 'pickingArticoloMan'
 		BEGIN
 			IF @FL_LABEL = 'V'

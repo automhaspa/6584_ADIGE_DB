@@ -3,10 +3,13 @@ GO
 SET ANSI_NULLS ON
 GO
 
+
+
 CREATE VIEW [Printer].[vPrinter] AS
-	SELECT	CONCAT(SUBSTRING(PART.DESCRIZIONE,1,4), ' - ', P.Name)		Stampante,
-			P.Name,
-			PA.Id_Partizione,
+	SELECT	CASE
+				WHEN P.Id_Printer = 11 THEN CONCAT('ADIGE 1 - ',P.Name)
+				ELSE CONCAT(SUBSTRING(PART.DESCRIZIONE,1,4), ' - ', P.Name)		
+			END				Stampante,
 			P.Id_Printer
 	FROM	Printer.Printer					P
 	JOIN	Printer.Printer_Association		PA

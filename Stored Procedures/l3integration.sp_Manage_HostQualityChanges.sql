@@ -4,6 +4,7 @@ SET ANSI_NULLS ON
 GO
 
 
+
 CREATE PROCEDURE [l3integration].[sp_Manage_HostQualityChanges]
 	-- Parametri Standard;
 	@Id_Processo	VARCHAR(30),
@@ -84,13 +85,14 @@ BEGIN
 				IF @STAT_QUAL_NEW_C = 'BLOC'
 				BEGIN
 					--VERIFICO PRIMA DI TUTTO SE LA QUANTITA' RICHIESTA E' UGUALE A QUELLA A STOCK
-					SELECT	@Qta_Stock = SUM(UD.Quantita_Pezzi)
+					SELECT	@Qta_Stock = SUM(CQ.Quantita)
 					FROM	Custom.ControlloQualita	CQ
 					JOIN	dbo.Udc_Dettaglio			UD
 					ON		UD.Id_UdcDettaglio = CQ.Id_UdcDettaglio
 					WHERE	UD.Id_Articolo = @Id_Articolo_C
 						AND CQ.Quantita > 0
 						AND ISNULL(@Control_Lot_C,CQ.Control_Lot) = CQ.Control_Lot
+						AND ISNULL(CQ.Doppio_Step_QM,0) = 1
 
 					IF ISNULL(@Qta_Stock,0) <> @QUANTITY_C
 						EXEC dbo.sp_Insert_Eventi
@@ -104,7 +106,6 @@ BEGIN
 						    @Errore				= @Errore		OUTPUT
 					ELSE
 					BEGIN
-						SELECT @Id_Articolo_C, @CONTROL_LOT_C
 						DECLARE Bloc_UDC_C CURSOR LOCAL FAST_FORWARD FOR
 							SELECT	UD.Id_UdcDettaglio,
 									UD.Quantita_Pezzi
@@ -114,6 +115,7 @@ BEGIN
 							WHERE	UD.Id_Articolo = @Id_Articolo_C
 								AND CQ.Quantita > 0
 								AND ISNULL(@Control_Lot_C,CQ.Control_Lot) = CQ.Control_Lot
+								AND ISNULL(CQ.Doppio_Step_QM,0) = 1
 
 						OPEN Bloc_UDC_C
 						FETCH NEXT FROM Bloc_UDC_C INTO
@@ -126,11 +128,13 @@ BEGIN
 								DELETE	Custom.ControlloQualita
 								WHERE	Id_UdcDettaglio = @Id_Udc_Dettaglio
 									AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CONTROL_LOT,'')
+									AND ISNULL(Doppio_Step_QM,0) = 1
 							ELSE
 								UPDATE	Custom.ControlloQualita
 								SET		Quantita = Quantita - @QUANTITY_C
 								WHERE	Id_UdcDettaglio = @Id_Udc_Dettaglio
 									AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CONTROL_LOT,'')
+									AND ISNULL(Doppio_Step_QM,0) = 1
 
 							IF NOT EXISTS (SELECT TOP(1) 1 FROM Custom.NonConformita WHERE Id_UdcDettaglio = @Id_Udc_Dettaglio)
 								INSERT INTO Custom.NonConformita
@@ -154,13 +158,14 @@ BEGIN
 				--SE DEVO LIBERARE QUALCOSA INVECE DEVO RIMUOVERE DAL CONTROLLO QUALITA' QUELLO CHE C'ERA
 				IF @STAT_QUAL_NEW_C = 'DISP'
 				BEGIN
-					SELECT	@Qta_Stock = SUM(UD.Quantita_Pezzi)
+					SELECT	@Qta_Stock = SUM(CQ.Quantita)
 					FROM	Custom.ControlloQualita		CQ
 					JOIN	dbo.Udc_Dettaglio			UD
 					ON		UD.Id_UdcDettaglio = CQ.Id_UdcDettaglio
 					WHERE	UD.Id_Articolo = @Id_Articolo_C
 						AND CQ.Quantita > 0
 						AND ISNULL(@Control_Lot_C,CQ.Control_Lot) = CQ.Control_Lot
+						AND ISNULL(CQ.Doppio_Step_QM,0) = 1
 
 					IF ISNULL(@Qta_Stock,0) <> @QUANTITY_C
 						EXEC dbo.sp_Insert_Eventi
@@ -190,6 +195,7 @@ BEGIN
 							WHERE	UD.Id_Articolo = @Id_Articolo_C
 								AND CQ.Quantita > 0
 								AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CQ.CONTROL_LOT,'')
+								AND ISNULL(CQ.Doppio_Step_QM,0) = 1
 							
 						OPEN Disp_UDC_C
 						FETCH NEXT FROM Disp_UDC_C INTO
@@ -201,23 +207,24 @@ BEGIN
 
 						WHILE @@FETCH_STATUS = 0
 						BEGIN
-						
-						SELECT @Id_Articolo_C, @CONTROL_LOT_C
 							IF EXISTS	(
 											SELECT	TOP(1) 1
 											FROM	Custom.ControlloQualita
 											WHERE	Id_UdcDettaglio = @Id_Udc_Dettaglio
 												AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CONTROL_LOT,'')
 												AND Quantita <= @QUANTITY_C
+												AND ISNULL(Doppio_Step_QM,0) = 1
 										)
 								DELETE	Custom.ControlloQualita
 								WHERE	Id_UdcDettaglio = @Id_Udc_Dettaglio
 									AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CONTROL_LOT,'')
+									AND ISNULL(Doppio_Step_QM,0) = 1
 							ELSE
 								UPDATE	Custom.ControlloQualita
 								SET		Quantita = Quantita - @QUANTITY_C
 								WHERE	Id_UdcDettaglio = @Id_Udc_Dettaglio
 									AND ISNULL(@CONTROL_LOT_C,'') = ISNULL(CONTROL_LOT,'')
+									AND ISNULL(Doppio_Step_QM,0) = 1
 								
 							IF	(
 									@Id_Partizione = 3701 ---o se l'udc e' ingombrante

@@ -10,6 +10,7 @@ INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sot
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7697, 'Cremagliere LT8')
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7698, 'Mandrini LT8')
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7699, 'Cabine LT8')
+INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7700, 'Adige 1')
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7702, 'Basamenti LT8')
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7703, 'Strutture Anteriori LT8')
 INSERT INTO [Custom].[NomenclaturaPartizAreeTerra] ([Id_Partizione], [Codice_Sottoarea]) VALUES (7704, 'Prolunghe basamento LT8')

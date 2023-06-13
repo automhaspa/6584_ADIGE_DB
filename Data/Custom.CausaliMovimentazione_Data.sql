@@ -3,6 +3,7 @@ INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Des
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('CTC', 'MOV_SUM', 'Rientro merci tecnici', '+', 0)
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('EAC', 'INC_ORD_SUM', 'Entrata Acquisto', '+', 1)
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('EOP', 'INC_ORD_SUM', 'Entrata Produzione', '+', 1)
+INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('NOS', 'MOV_SUM', 'Spostamento verso Modula senza SAP', '-', 1)
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('PPS', 'MOV_SUM', 'Prelievo per scomposizione', '-', 1)
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('PRA', 'MOV_SUM', 'Prelievo Ricambio Assistenza', '-', 0)
 INSERT INTO [Custom].[CausaliMovimentazione] ([Id_Causale], [Tipo_Causale], [Descrizione_Causale], [Action], [Attivo]) VALUES ('PRC', 'MOV_SUM', 'Prelievo per Reso a cliente', '-', 0)

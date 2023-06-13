@@ -20,12 +20,15 @@ BEGIN
    DECLARE @Nome_StoredProcedure Varchar(30)
    DECLARE @TranCount Int
    DECLARE @Return Int
+
    -- Settaggio della variabile che indica il nome delle procedura in esecuzione;
    SET @Nome_StoredProcedure = Object_Name(@@ProcId) 
    -- Salvataggio del numero d transazioni aperte al momento dello start della procedura;
    SET @TranCount = @@TRANCOUNT
    -- Se il numero di transazioni è 0 significa ke devo aprirla, altrimenti ne salvo una nidificata;
    IF @TranCount = 0 BEGIN TRANSACTION
+
+
 
    BEGIN TRY           
        -- Recupero i parametri che mi hanno passato
@@ -157,72 +160,98 @@ BEGIN
 		IF @ERRORECS = ''
 		BEGIN
 			--Se sto entrando da 3A02 faccio l'update anche del Barcode
-			IF	@Id_Partizione_Attuale = 3102
-				AND
-				NOT EXISTS (SELECT TOP 1 1 FROM dbo.Udc_Dettaglio WHERE ID_Udc = @Id_Udc)
+			IF @Id_Partizione_Attuale = 3102
 			BEGIN
-				--Se ho un barcode duplicato verifico anche l'area Terra.
-				IF EXISTS(SELECT TOP 1 1 FROM Udc_Testata WHERE Codice_Udc = @Barcode AND ID_UDC <> @Id_Udc)
+				IF NOT EXISTS (SELECT TOP 1 1 FROM dbo.Udc_Dettaglio WHERE ID_Udc = @Id_Udc) OR @IdTipoMissione = 'INT'
 				BEGIN
-					DECLARE @IdTipoPartizione	VARCHAR(2)
-					DECLARE	@Id_UdcTerra		INT
-
-					--Controllo  se è un rientro da area a terra
-					SELECT	@IdTipoPartizione	= ISNULL(P.ID_TIPO_PARTIZIONE,''),
-							@Id_UdcTerra		= ISNULL(UT.Id_Udc,0),
-							@Id_Partizione_AT	= UP.Id_Partizione
-					FROM	Udc_Testata		UT
-					JOIN	Udc_Posizione	UP
-					ON		UT.Id_Udc = UP.Id_Udc
-					JOIN	Partizioni		P
-					ON		P.ID_PARTIZIONE = UP.Id_Partizione
-					WHERE	Codice_Udc = @Barcode
-
-					--Se ho lo stesso barcode in area terra allora e ho la missione di rientro sposto l'UDC da terra a magazzino
-					IF @IdTipoPartizione IN ('AT','MI') AND @IdTipoMissione = 'INT'
+					--Se ho un barcode duplicato verifico anche l'area Terra.
+					IF EXISTS(SELECT TOP 1 1 FROM Udc_Testata WHERE Codice_Udc = @Barcode AND ID_UDC <> @Id_Udc)
 					BEGIN
-						--Elimino l'UDC appena creata
-						EXEC @Return = sp_Delete_EliminaUdc
-									@Id_Udc			= @Id_Udc,
-									@Id_Processo	= @Id_Processo,
-									@Origine_Log	= @Origine_Log,
-									@Id_Utente		= @Id_Utente,
-									@Errore			= @Errore			OUTPUT
+						DECLARE @IdTipoPartizione	VARCHAR(2)
+						DECLARE	@Id_UdcTerra		INT
 
-						--Aggiorno la posizione di quella a terra alla rulliera attuale (3A02)
-						UPDATE	Udc_Posizione
-						SET		Id_Partizione = 3102
-						WHERE	Id_Udc = @Id_UdcTerra
+						--Controllo  se è un rientro da area a terra
+						SELECT	@IdTipoPartizione	= ISNULL(P.ID_TIPO_PARTIZIONE,''),
+								@Id_UdcTerra		= ISNULL(UT.Id_Udc,0),
+								@Id_Partizione_AT	= UP.Id_Partizione
+						FROM	Udc_Testata		UT
+						JOIN	Udc_Posizione	UP
+						ON		UT.Id_Udc = UP.Id_Udc
+						JOIN	Partizioni		P
+						ON		P.ID_PARTIZIONE = UP.Id_Partizione
+						WHERE	Codice_Udc = @Barcode
 
-						--Cambio L'ID udc gestita in questo momento
-						SET @Id_Udc = @Id_UdcTerra
+						--Se ho lo stesso barcode in area terra allora e ho la missione di rientro sposto l'UDC da terra a magazzino
+						IF @IdTipoPartizione IN ('AT','MI') AND @IdTipoMissione = 'INT'
+						BEGIN
+							--Elimino l'UDC appena creata
+							EXEC @Return = sp_Delete_EliminaUdc
+										@Id_Udc			= @Id_Udc,
+										@Id_Processo	= @Id_Processo,
+										@Origine_Log	= @Origine_Log,
+										@Id_Utente		= @Id_Utente,
+										@Errore			= @Errore			OUTPUT
+
+							--Aggiorno la posizione di quella a terra alla rulliera attuale (3A02)
+							UPDATE	Udc_Posizione
+							SET		Id_Partizione = 3102
+							WHERE	Id_Udc = @Id_UdcTerra
+
+							--Cambio L'ID udc gestita in questo momento
+							SET @Id_Udc = @Id_UdcTerra
+						END
+						
+						--Non deve arrivare da packing list
+						ELSE IF @IdTipoPartizione = 'AP' AND @IdTipoMissione = 'INT'
+							SET @ERRORECS = '<CODICE_UDC>Barcode legato ad un''UDC di una Packing List. Eliminare l''Udc.</CODICE_UDC>'
+						ELSE
+							SET @ERRORECS = CONCAT('<CODICE_UDC>Codice Barcode: ',@BARCODE, ' già presente su un''UDC in magazzino</CODICE_UDC>')
 					END
-
-					--Non deve arrivare da packing list
-					ELSE IF @IdTipoPartizione = 'AP' AND @IdTipoMissione = 'INT'
-						SET @ERRORECS = '<CODICE_UDC>Barcode legato ad un''UDC di una Packing List. Eliminare l''Udc.</CODICE_UDC>'
+					--Se non ho l'UDC in area terra ma sono una missione di rientro vado in reject con l'eccezione
+					ELSE IF @IdTipoMissione = 'INT'
+								AND
+							NOT EXISTS(SELECT TOP 1 1 FROM Udc_Testata WHERE Codice_Udc = @Barcode)
+						SET @ERRORECS = CONCAT('<CODICE_UDC>Selezionato rientro da Area Terra di un''UDC non presente a Terra - CODICE UDC ',@Barcode, '.</CODICE_UDC>')
+					--Se non ho barcode duplicati aggiorno il codice UDC
 					ELSE
-						SET @ERRORECS = CONCAT('<CODICE_UDC>Codice Barcode: ',@BARCODE, ' già presente su un''UDC in magazzino</CODICE_UDC>')
+					BEGIN
+						IF EXISTS (SELECT 1 FROM dbo.Udc_Testata UT WHERE UT.Codice_Udc = @Barcode AND UT.Id_Udc <> @Id_Udc)
+						BEGIN
+							SET @ERRORECS = CONCAT('<CODICE_UDC>Già esistente nel sistema, controllare l''area a terra o lo stock in magazzino - CODICE UDC ',@Barcode, '.</CODICE_UDC>')
+						END
+						ELSE
+						BEGIN
+							UPDATE	Udc_Testata
+							SET		Codice_Udc = @Barcode
+							WHERE	Id_Udc= @Id_Udc
+
+							--Aggiorno la lista barcode e lo escludo
+							UPDATE	Custom.AnagraficaBancali
+							SET		Stato = 2
+							WHERE	Codice_Barcode = @Barcode
+						END
+					END
 				END
-				--Se non ho l'UDC in area terra ma sono una missione di rientro vado in reject con l'eccezione
-				ELSE IF @IdTipoMissione = 'INT'
-							AND
-						NOT EXISTS(SELECT TOP 1 1 FROM Udc_Testata WHERE Codice_Udc = @Barcode)
-					SET @ERRORECS = '<CODICE_UDC>Selezionato rientro da Area Terra di un''UDC non presente a Terra.</CODICE_UDC>'
-				--Se non ho barcode duplicati aggiorno il codice UDC
 				ELSE
 				BEGIN
-					UPDATE	Udc_Testata
-					SET		Codice_Udc = @Barcode
-					WHERE	Id_Udc= @Id_Udc
+					IF EXISTS (SELECT 1 FROM dbo.Udc_Testata UT WHERE UT.Codice_Udc = @Barcode AND UT.Id_Udc <> @Id_Udc)
+					BEGIN
+						SET @ERRORECS = CONCAT('<CODICE_UDC>Già esistente nel sistema, controllare l''area a terra o lo stock in magazzino - CODICE UDC ',@Barcode, '.</CODICE_UDC>')
+					END
+					ELSE
+					BEGIN
+						UPDATE	Udc_Testata
+						SET		Codice_Udc = @Barcode
+						WHERE	Id_Udc= @Id_Udc
 
-					--Aggiorno la lista barcode e lo escludo
-					UPDATE	Custom.AnagraficaBancali
-					SET		Stato = 2
-					WHERE	Codice_Barcode = @Barcode
+						--Aggiorno la lista barcode e lo escludo
+						UPDATE	Custom.AnagraficaBancali
+						SET		Stato = 2
+						WHERE	Codice_Barcode = @Barcode
+					END
 				END
 			END
-
+		
 			--Se sono in rientro da navetta la misura del bancale può essere cambiata perciò faccio l'update
 			UPDATE	Udc_Testata
 			SET		Id_Tipo_Udc	= @Id_Tipo_Udc,
@@ -322,7 +351,7 @@ BEGIN
 	END TRY
 	BEGIN CATCH
        -- Valorizzo l'errore con il nome della procedura corrente seguito dall'errore scatenato nel codice;
-       SET @Errore = @Nome_StoredProcedure + ';' + ERROR_MESSAGE()
+       SET @Errore = @Nome_StoredProcedure + ';' + ERROR_MESSAGE() 
        -- Eseguo il rollback ed inserisco il log solo se sono la procedura iniziale che ha iniziato la transazione;
        IF @TranCount = 0
        BEGIN

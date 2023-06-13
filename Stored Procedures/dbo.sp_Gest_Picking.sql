@@ -2,6 +2,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_NULLS ON
 GO
+
 CREATE PROCEDURE [dbo].[sp_Gest_Picking]
 	@Id_Evento			INT,
 	@Id_Udc				INT,
@@ -74,17 +75,17 @@ BEGIN
 
 		--Causale 1 picking da lista
 		EXEC dbo.sp_Update_Aggiorna_Contenuto_Udc
-							@Id_Udc					= @Id_Udc,
-							@Id_UdcDettaglio		= @IdUdcDettaglio,
-							@Id_Articolo			= @IdArticoloAutomha,
-							@Qta_Pezzi_Input		= @Qta_Prelevata,
-							@Id_Causale_Movimento	= 1,
-							@Id_Riga_Lista			= @Id_Riga_Lista,
-							@Id_Testata_Lista		= @Id_Testata_Lista,
-							@Id_Processo			= @Id_Processo,
-							@Origine_Log			= @Origine_Log,
-							@Id_Utente				= @Id_Utente,
-							@Errore					= @Errore			OUTPUT
+				@Id_Udc					= @Id_Udc,
+				@Id_UdcDettaglio		= @IdUdcDettaglio,
+				@Id_Articolo			= @IdArticoloAutomha,
+				@Qta_Pezzi_Input		= @Qta_Prelevata,
+				@Id_Causale_Movimento	= 1,
+				@Id_Riga_Lista			= @Id_Riga_Lista,
+				@Id_Testata_Lista		= @Id_Testata_Lista,
+				@Id_Processo			= @Id_Processo,
+				@Origine_Log			= @Origine_Log,
+				@Id_Utente				= @Id_Utente,
+				@Errore					= @Errore			OUTPUT
 							
 		--Controllo packing list
 		EXEC [dbo].[sp_Gest_Packing_List]
@@ -179,6 +180,16 @@ BEGIN
 			FROM	Custom.TestataListePrelievo
 			WHERE	ID = @Id_Testata_Lista
 
+			DECLARE @Id_Evento_RigheAttive INT
+			SELECT	@Id_Evento_RigheAttive = Id_Evento
+			FROM	EVENTI
+			WHERE	Id_Tipo_Evento = 7
+				AND Xml_Param.value('data(//Parametri//Id_Testata_Lista)[1]','int') = @Id_Testata_Lista
+
+			IF @Id_Evento_RigheAttive IS NOT NULL
+				DELETE	EVENTI
+				WHERE	Id_Evento = @Id_Evento_RigheAttive
+			
 			SET @Errore = CONCAT ('Picking eseguito, LISTA CONCLUSA LATO AUTOMHA, ORDER ID : ', @TestataLista, ' CAUSALE: ', @CAUSALELISTA)
 		END
 

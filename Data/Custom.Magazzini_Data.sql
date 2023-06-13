@@ -8,6 +8,7 @@ INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0027',
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0031', 'KB Lunette')
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0032', 'KB Teste Taglio')
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0033', 'KB TestineActive')
+INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0036', 'KB Premont ADG7')
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0037', 'KB Sorg Las ADG7')
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0038', 'KB Area Dot ADG7')
 INSERT INTO [Custom].[Magazzini] ([Id_Magazzino], [Descrizione]) VALUES ('0100', 'ADIGE 6')
